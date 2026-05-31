@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMNC II - Leitura de Hidrometros</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4f0;min-height:100vh;}
+.nav{background:#1a6b2e;color:white;padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 10px rgba(0,0,0,0.25);position:sticky;top:0;z-index:100;}
+.nav-logo{width:46px;height:46px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1a6b2e;font-weight:900;font-size:11px;text-align:center;line-height:1.3;}
+.nav-title{font-size:16px;font-weight:700;}
+.nav-sub{font-size:11px;opacity:0.75;}
+.nav-tabs{margin-left:auto;display:flex;gap:8px;}
+.nav-tab{background:rgba(255,255,255,0.15);border:none;color:white;padding:8px 18px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;}
+.nav-tab.active{background:white;color:#1a6b2e;}
+.sync-indicator{display:flex;align-items:center;gap:6px;font-size:12px;background:rgba(255,255,255,0.15);padding:5px 12px;border-radius:20px;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#ff9800;flex-shrink:0;}
+.sync-dot.online{background:#4caf50;animation:pulse 2s infinite;}
+.sync-dot.error{background:#f44336;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.main{max-width:1000px;margin:0 auto;padding:20px;}
+.hidden{display:none!important;}
+.card{background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);}
+.card-title{font-size:15px;font-weight:700;color:#1a6b2e;margin-bottom:14px;}
+.status-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.stat-box{flex:1;min-width:70px;background:white;border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.07);}
+.stat-num{font-size:26px;font-weight:800;color:#1a6b2e;}
+.stat-num.orange{color:#e65100;}
+.stat-num.blue{color:#1565c0;}
+.stat-label{font-size:11px;color:#777;margin-top:2px;}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.form-group{flex:1;min-width:180px;}
+label{font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:4px;}
+input,textarea{width:100%;padding:9px 12px;border:1.5px solid #d0e8d0;border-radius:8px;font-size:14px;outline:none;transition:border-color 0.2s;}
+input:focus,textarea:focus{border-color:#1a6b2e;}
+.btn{padding:9px 18px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-green{background:#1a6b2e;color:white;}
+.btn-green:hover{background:#145523;}
+.btn-blue{background:#1565c0;color:white;}
+.btn-red{background:#c62828;color:white;}
+.btn-sm{padding:5px 11px;font-size:12px;}
+.btn-outline{background:transparent;border:2px solid #1a6b2e;color:#1a6b2e;}
+.btn-outline:hover{background:#1a6b2e;color:white;}
+.btn-ghost{background:#f5f5f5;color:#333;border:1.5px solid #ddd;}
+.btn-ghost:hover{background:#e8e8e8;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
+th{background:#e8f5e9;color:#1a6b2e;padding:10px 8px;text-align:left;font-weight:700;white-space:nowrap;}
+td{padding:8px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+tr:hover td{background:#f9fef9;}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+.badge-pending{background:#fff3e0;color:#e65100;}
+.badge-done{background:#e8f5e9;color:#1a6b2e;}
+.chk-col{width:36px;text-align:center;}
+input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#1a6b2e;}
+.mb-header{background:#1a6b2e;color:white;border-radius:12px;padding:16px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;}
+.mb-sync-badge{margin-left:auto;background:rgba(255,255,255,0.2);padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
+.addr-card{background:white;border-radius:12px;padding:18px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,0.08);border-left:4px solid #e0e0e0;}
+.addr-card.done{border-left-color:#1a6b2e;background:#f9fff9;}
+.addr-card.active{border-left-color:#1565c0;box-shadow:0 4px 16px rgba(21,101,192,0.15);}
+.addr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.addr-name{font-size:16px;font-weight:700;color:#222;}
+.addr-meta{font-size:11px;color:#888;margin-top:3px;}
+.addr-obs{font-size:12px;color:#e65100;margin-top:4px;font-style:italic;}
+.expand-btn{background:#f0faf0;border:1.5px solid #c8e6c9;color:#1a6b2e;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.fill-form{display:none;border-top:1px solid #f0f0f0;padding-top:16px;margin-top:14px;}
+.fill-form.open{display:block;}
+.fill-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.fill-group{flex:1;min-width:140px;}
+.fill-group label{font-size:12px;font-weight:600;color:#444;margin-bottom:5px;display:block;}
+.fill-group input{padding:12px;font-size:16px;}
+.photo-slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
+.photo-slot{border:2px dashed #b0d8b0;border-radius:10px;overflow:hidden;background:#f9fff9;cursor:pointer;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+.photo-slot:hover{border-color:#1a6b2e;background:#f0faf0;}
+.photo-slot.has-photo{border-color:#1a6b2e;border-style:solid;}
+.photo-slot img{width:100%;height:110px;object-fit:cover;display:block;}
+.photo-slot-label{font-size:10px;font-weight:700;color:#1a6b2e;text-align:center;padding:5px 4px;background:#e8f5e9;width:100%;text-transform:uppercase;}
+.photo-slot-ph{display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 8px;}
+.photo-slot-ph .ci{font-size:26px;}
+.photo-slot-ph .sn{font-size:11px;font-weight:700;color:#1a6b2e;text-align:center;text-transform:uppercase;}
+.photo-slot-ph .st{font-size:10px;color:#999;}
+.del-btn{position:absolute;top:4px;right:4px;background:rgba(198,40,40,0.9);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;font-weight:700;z-index:10;display:flex;align-items:center;justify-content:center;}
+.submit-btn{width:100%;padding:15px;font-size:16px;font-weight:700;background:#1a6b2e;color:white;border:none;border-radius:10px;cursor:pointer;margin-top:4px;}
+.submit-btn:hover{background:#145523;}
+.submit-btn:disabled{background:#a5d6a7;cursor:not-allowed;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:white;border-radius:14px;padding:24px;max-width:900px;width:100%;margin:auto;}
+.modal-sm{max-width:500px!important;}
+.modal-title{font-size:17px;font-weight:700;color:#1a6b2e;margin-bottom:6px;}
+.modal-sub{font-size:13px;color:#666;margin-bottom:16px;}
+.alert-info{background:#e3f2fd;color:#1565c0;border-left:4px solid #1565c0;padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:13px;}
+.alert-warn{background:#fff8e1;color:#e65100;border-left:4px solid #ff9800;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;}
+.review-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;}
+.review-table th{background:#1a6b2e;color:white;padding:10px;text-align:left;font-size:12px;}
+.review-table td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:middle;}
+.review-table tr:nth-child(even) td{background:#f9fff9;}
+.edit-input{border:1.5px solid #d0e8d0;border-radius:6px;padding:6px 8px;font-size:13px;width:100%;outline:none;background:white;}
+.edit-input:focus{border-color:#1a6b2e;background:#f9fff9;}
+.edit-input.changed{border-color:#ff9800!important;background:#fff8e1!important;}
+.review-photos{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.review-thumb{width:34px;height:34px;object-fit:cover;border-radius:5px;border:2px solid #b0d8b0;cursor:pointer;}
+.no-photo-slot{width:34px;height:34px;border-radius:5px;border:2px dashed #ddd;display:flex;align-items:center;justify-content:center;font-size:10px;color:#ccc;}
+.status-done-txt{color:#1a6b2e;font-weight:700;font-size:12px;}
+.status-pend-txt{color:#e65100;font-weight:700;font-size:12px;}
+.photo-modal-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
+.pitem-lg{text-align:center;}
+.pitem-lg img{width:88px;height:88px;object-fit:cover;border-radius:8px;border:2px solid #d0e8d0;display:block;}
+.pitem-lg .plabel{font-size:10px;color:#555;margin-top:3px;font-weight:600;text-transform:uppercase;}
+.thumb-sm{width:28px;height:28px;object-fit:cover;border-radius:4px;border:1px solid #b0d8b0;}
+.thumb-strip{display:flex;gap:3px;align-items:center;}
+.empty-state{text-align:center;padding:36px 20px;color:#999;}
+.empty-state .eicon{font-size:38px;margin-bottom:10px;}
+.section-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.pill-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.review-footer{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding-top:16px;border-top:1px solid #eee;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a6b2e;color:white;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity 0.3s;box-shadow:0 4px 16px rgba(0,0,0,0.2);pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.toast.error{background:#c62828;}
+@media(max-width:500px){.nav{flex-wrap:wrap;gap:8px;}.nav-tabs{width:100%;}.nav-tab{flex:1;text-align:center;padding:8px 6px;font-size:12px;}.sync-indicator{display:none;}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo">CMNC<br>II</div>
+  <div><div class="nav-title">Leitura de Hidrometros</div><div class="nav-sub">CMNC II &times; SABESP</div></div>
+  <div class="sync-indicator"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Conectando...</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-admin" onclick="showView('admin')">&#128100; Admin</button>
+    <button class="nav-tab" id="tab-motoboy" onclick="showView('motoboy')">&#128663; Motoboy</button>
+  </div>
+</nav>
+
+<div id="view-admin" class="main">
+  <div class="status-bar">
+    <div class="stat-box"><div class="stat-num" id="s-total">0</div><div class="stat-label">Total</div></div>
+    <div class="stat-box"><div class="stat-num orange" id="s-pending">0</div><div class="stat-label">Pendentes</div></div>
+    <div class="stat-box"><div class="stat-num" id="s-done">0</div><div class="stat-label">Concluidos</div></div>
+    <div class="stat-box"><div class="stat-num blue" id="s-sel">0</div><div class="stat-label">Selecionados</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">+ Novo Endereco</div>
+    <div class="form-row">
+      <div class="form-group" style="max-width:185px"><label>Protocolo / OS</label><input type="text" id="np" placeholder="Ex: 2614603386"></div>
+      <div class="form-group" style="flex:3"><label>Endereco completo</label><input type="text" id="na" placeholder="Ex: RUA HUMBERTO I, 402, V MARIANA"></div>
+      <div class="form-group"><label>Observacao</label><input type="text" id="no" placeholder="necessario fotos de hidrometros"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+      <button class="btn btn-green" onclick="addAddr()">Adicionar</button>
+      <button class="btn btn-outline" onclick="showBulk()">&#128203; Em Lote</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-header">
+      <div class="card-title" style="margin:0">Lista de Enderecos</div>
+      <div class="pill-actions">
+        <button class="btn btn-blue btn-sm" onclick="selectAll()">Sel. Todos</button>
+        <button class="btn btn-ghost btn-sm" onclick="deselectAll()">Desmarcar</button>
+        <button class="btn btn-green btn-sm" onclick="openReview()">&#9997; Revisar e Gerar PDF</button>
+        <button class="btn btn-red btn-sm" onclick="clearAll()">&#128465; Limpar Tudo</button>
+      </div>
+    </div>
+    <div class="table-wrap"><div id="admin-table"></div></div>
+  </div>
+</div>
+
+<div id="view-motoboy" class="main hidden">
+  <div class="mb-header">
+    <div style="font-size:32px">&#128663;</div>
+    <div><div style="font-size:17px;font-weight:700">Painel do Motoboy</div><div style="font-size:12px;opacity:0.8;margin-top:2px">Preencha os dados e fotos de cada endereco</div></div>
+    <div class="mb-sync-badge"><div class="sync-dot" id="mb-sync-dot"></div><span id="mb-sync-label">Conectando...</span></div>
+  </div>
+  <div id="motoboy-list"></div>
+</div>
+
+<div class="modal-overlay" id="bulk-modal">
+  <div class="modal modal-sm">
+    <div class="modal-title">Adicionar em Lote</div>
+    <p style="font-size:13px;color:#666;margin-bottom:10px">Cole um por linha: <strong>PROTOCOLO | ENDERECO</strong></p>
+    <div class="alert-info">2614603386 | RUA HUMBERTO I, 402, V MARIANA</div>
+    <textarea id="bulk-text" style="height:140px;margin-bottom:12px" placeholder="Cole aqui..."></textarea>
+    <div style="display:flex;gap:8px"><button class="btn btn-green" onclick="importBulk()">Importar</button><button class="btn btn-outline" onclick="closeBulk()">Cancelar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ph-modal">
+  <div class="modal modal-sm">
+    <div class="modal-title">Fotos</div>
+    <div id="ph-modal-addr" style="font-size:13px;color:#555;margin-bottom:12px;padding:8px;background:#f0faf0;border-radius:8px;font-weight:600"></div>
+    <div class="photo-modal-grid" id="ph-modal-grid"></div>
+    <div style="margin-top:16px"><button class="btn btn-outline" onclick="closePh()">Fechar</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="review-modal">
+  <div class="modal">
+    <div class="modal-title">&#9997; Revisar e Editar antes de Gerar PDF</div>
+    <div class="modal-sub">Clique em qualquer campo para corrigir. Campos alterados ficam em laranja.</div>
+    <div id="review-warn" class="alert-warn" style="display:none"></div>
+    <div style="overflow-x:auto">
+      <table class="review-table">
+        <thead><tr><th>#</th><th>OS</th><th>Endereco</th><th>Nr Hidrometro</th><th>Leitura m3</th><th>Fotos</th><th>Status</th></tr></thead>
+        <tbody id="review-tbody"></tbody>
+      </table>
+    </div>
+    <div class="review-footer">
+      <button class="btn btn-outline" onclick="closeReview()">Cancelar</button>
+      <button class="btn btn-green" onclick="generatePDF()" style="font-size:15px;padding:12px 28px">&#128196; Gerar PDF Agora</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="file-inputs" style="display:none"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB81yqQaDeOhrPKARU-mLBoVtxgCO2cUns",
+  authDomain: "cmnc-hidrometros.firebaseapp.com",
+  databaseURL: "https://cmnc-hidrometros-default-rtdb.firebaseio.com",
+  projectId: "cmnc-hidrometros",
+  storageBucket: "cmnc-hidrometros.firebasestorage.app",
+  messagingSenderId: "448064050754",
+  appId: "1:448064050754:web:2fef6b1329eb98707cffdb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const SLOT_LABELS = ['Fachada', 'Nr Hidrometro', 'Leitura'];
+const G = [26,107,46], W = [255,255,255], L = [240,248,240];
+let addresses = {}, currentView = 'admin', reviewData = [];
+let mbState = { openId: null, meter: {}, reading: {} };
+
+function uid(){ return 'id_' + Date.now() + '_' + Math.floor(Math.random()*99999); }
+function toast(msg,type){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(type==='error'?' error':''); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3000); }
+function setSyncStatus(online){ const cls=online?'sync-dot online':'sync-dot error',lbl=online?'Online ao vivo':'Sem conexao'; ['sync-dot','mb-sync-dot'].forEach(id=>{const e=document.getElementById(id);if(e)e.className=cls;}); ['sync-label','mb-sync-label'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=lbl;}); }
+
+onValue(ref(db,'cmnc/addresses'),(snap)=>{
+  const val=snap.val()||{};
+  const sel=new Set(Object.keys(addresses).filter(k=>addresses[k]&&addresses[k].selected));
+  addresses={};
+  Object.keys(val).forEach(k=>{addresses[k]=val[k];if(sel.has(k))addresses[k].selected=true;});
+  setSyncStatus(true);
+  if(currentView==='admin'){renderAdmin();updateStats();}
+  if(currentView==='motoboy'){updateMotoboySmartly();updateStats();}
+},()=>{setSyncStatus(false);toast('Erro de conexao','error');});
+
+async function writeAddr(id,data){try{await set(ref(db,'cmnc/addresses/'+id),data);}catch(e){toast('Erro ao salvar!','error');}}
+async function deleteAddrDb(id){try{await remove(ref(db,'cmnc/addresses/'+id));}catch(e){}}
+async function clearAllDb(){try{await set(ref(db,'cmnc/addresses'),null);}catch(e){}}
+
+window.openReview = function(){
+  var selected=Object.values(addresses).filter(function(a){return a.selected;});
+  if(!selected.length){alert('Selecione pelo menos um endereco!');return;}
+  reviewData=selected.map(function(a){return JSON.parse(JSON.stringify(a));});
+  var hasPend=reviewData.some(function(a){return a.status!=='done';});
+  var warn=document.getElementById('review-warn');
+  if(warn){warn.style.display=hasPend?'block':'none';if(hasPend)warn.textContent='Atencao: '+reviewData.filter(function(a){return a.status!=='done';}).length+' pendentes.';}
+  var tbody=document.getElementById('review-tbody');
+  tbody.innerHTML='';
+  reviewData.forEach(function(a,i){
+    var photos=a.photos||['','',''];
+    var tr=document.createElement('tr');
+    var td0=document.createElement('td');td0.style.cssText='color:#aaa;font-size:12px;text-align:center';td0.textContent=i+1;tr.appendChild(td0);
+    var fields=[['protocol','90px'],['address','160px'],['meter','100px'],['reading','80px']];
+    fields.forEach(function(fdef){
+      var field=fdef[0],minW=fdef[1];
+      var td=document.createElement('td');
+      var inp=document.createElement('input');
+      inp.className='edit-input';inp.id='rev-'+field[0]+'-'+a.id;inp.value=a[field]||'';inp.style.minWidth=minW;
+      inp.addEventListener('change',(function(fld,aid){return function(){this.classList.add('changed');var e=reviewData.find(function(x){return x.id===aid;});if(e)e[fld]=this.value;};})(field,a.id));
+      td.appendChild(inp);tr.appendChild(td);
+    });
+    var ptd=document.createElement('td');
+    var pdiv=document.createElement('div');pdiv.className='review-photos';
+    photos.forEach(function(p,si){
+      if(p){var img=document.createElement('img');img.className='review-thumb';img.src=p;img.title=SLOT_LABELS[si];img.addEventListener('click',(function(aid,sii){return function(){previewPhoto(aid,sii);};})(a.id,si));pdiv.appendChild(img);}
+      else{var ph=document.createElement('div');ph.className='no-photo-slot';ph.innerHTML='&#128247;';pdiv.appendChild(ph);}
+    });
+    ptd.appendChild(pdiv);tr.appendChild(ptd);
+    var std=document.createElement('td');var sp=document.createElement('span');
+    sp.className=a.status==='done'?'status-done-txt':'status-pend-txt';sp.textContent=a.status==='done'?'OK':'Pend.';
+    std.appendChild(sp);tr.appendChild(std);
+    tbody.appendChild(tr);
+  });
+  document.getElementById('review-modal').classList.add('open');
+};
+window.markChanged=function(el,id,field){el.classList.add('changed');const e=reviewData.find(a=>a.id===id);if(e)e[field]=el.value;};
+window.previewPhoto=function(id,si){
+  const a=reviewData.find(x=>x.id===id);if(!a)return;
+  const photos=a.photos||['','',''];
+  document.getElementById('ph-modal-addr').textContent=a.address;
+  document.getElementById('ph-modal-grid').innerHTML=photos.map((p,i)=>p?'<div class="pitem-lg"><img src="'+p+'"><div class="plabel">'+SLOT_LABELS[i]+'</div></div>':'').join('');
+  document.getElementById('ph-modal').classList.add('open');
+};
+window.closeReview=()=>document.getElementById('review-modal').classList.remove('open');
+
+window.generatePDF = async function(){
+  if(!reviewData.length){alert('Abra a revisao primeiro!');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+
+  function addHeader(t1,t2,t3){
+    doc.setFillColor(...G);doc.rect(0,0,210,46,'F');
+    doc.setFillColor(255,255,255);doc.circle(22,22,14,'F');
+    doc.setTextColor(...G);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text('CMNC',22,20,{align:'center'});doc.text('II',22,27,{align:'center'});
+    doc.setTextColor(255,255,255);doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text(t1,130,15,{align:'center'});
+    if(t2){doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(t2,130,24,{align:'center'});}
+    if(t3){doc.setFontSize(8);doc.text(t3,130,32,{align:'center'});}
+  }
+  function addFooter(p,total){
+    doc.setFillColor(...G);doc.rect(0,285,210,12,'F');
+    doc.setFillColor(255,255,255);doc.circle(12,291,5,'F');
+    doc.setTextColor(...G);doc.setFontSize(5.5);doc.setFont('helvetica','bold');
+    doc.text('CMNC',12,290,{align:'center'});doc.text('II',12,294,{align:'center'});
+    doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text('CMNC II x SABESP - Relatorio de Leitura de Hidrometros',115,293,{align:'center'});
+    doc.text('Pag. '+p+'/'+total,200,293,{align:'right'});
+  }
+
+  addHeader('RELATORIO DE LEITURA DE HIDROMETROS','CMNC II x SABESP - Controle de Leituras','Gerado em: '+new Date().toLocaleString('pt-BR'));
+  let y=54;
+  doc.setFillColor(...L);doc.roundedRect(14,y,182,18,3,3,'F');
+  doc.setTextColor(50,50,50);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text('Total: '+reviewData.length+'   Concluidos: '+reviewData.filter(a=>a.status==='done').length+'   Pendentes: '+reviewData.filter(a=>a.status!=='done').length,22,y+7);
+  doc.text('Data: '+new Date().toLocaleDateString('pt-BR'),22,y+14);
+  y+=26;
+  doc.setFillColor(...G);doc.rect(14,y,182,8,'F');
+  doc.setTextColor(...W);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+  doc.text('OS',17,y+5.5);doc.text('Endereco',40,y+5.5);doc.text('Nr Hidrometro',122,y+5.5);doc.text('Leitura m3',152,y+5.5);doc.text('Status',183,y+5.5);
+  y+=8;
+  reviewData.forEach((a,i)=>{
+    if(y>272){doc.addPage();addHeader('RELATORIO (continuacao)','CMNC II x SABESP','');y=54;doc.setFillColor(...G);doc.rect(14,y,182,8,'F');doc.setTextColor(...W);doc.setFontSize(7.5);doc.setFont('helvetica','bold');doc.text('OS',17,y+5.5);doc.text('Endereco',40,y+5.5);doc.text('Nr Hidrometro',122,y+5.5);doc.text('Leitura m3',152,y+5.5);doc.text('Status',183,y+5.5);y+=8;}
+    if(i%2===0){doc.setFillColor(245,252,245);doc.rect(14,y,182,10,'F');}
+    doc.setTextColor(50,50,50);doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+    const sa=(a.address||'').length>46?(a.address||'').substring(0,44)+'...':(a.address||'');
+    doc.text(a.protocol||'--',17,y+6.5);doc.text(sa,40,y+6.5);doc.text(a.meter||'--',122,y+6.5);doc.text(a.reading||'--',152,y+6.5);
+    doc.setTextColor(a.status==='done'?26:230,a.status==='done'?107:81,a.status==='done'?46:0);
+    doc.text(a.status==='done'?'Concluido':'Pendente',183,y+6.5);
+    doc.setTextColor(50,50,50);y+=10;
+  });
+  for(const a of reviewData){
+    const photos=a.photos||['','',''];if(!photos.some(p=>p))continue;
+    doc.addPage();
+    const addrS=(a.address||'').length>40?(a.address||'').substring(0,38)+'...':(a.address||'');
+    addHeader('FOTOS - '+addrS,'OS: '+(a.protocol||'--')+'   Hidrometro: '+(a.meter||'--')+'   Leitura: '+(a.reading||'--')+' m3','Data: '+(a.date||new Date().toLocaleDateString('pt-BR')));
+    const sw=56,sh=72,sx=14,sy=54,gap=8;
+    photos.forEach((ph,si)=>{
+      const px=sx+si*(sw+gap);
+      doc.setFillColor(...L);doc.roundedRect(px,sy,sw,sh+10,2,2,'F');
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...G);doc.text(SLOT_LABELS[si],px+sw/2,sy+6,{align:'center'});
+      if(ph){try{doc.addImage(ph,'JPEG',px+2,sy+9,sw-4,sh-2);}catch(e){doc.setFillColor(200,220,200);doc.rect(px+2,sy+9,sw-4,sh-2,'F');}}
+      else{doc.setFillColor(230,230,230);doc.rect(px+2,sy+9,sw-4,sh-2,'F');doc.setTextColor(180,180,180);doc.setFontSize(8);doc.text('Sem foto',px+sw/2,sy+sh/2+9,{align:'center'});}
+    });
+    const iy=sy+sh+18;doc.setFillColor(...L);doc.roundedRect(14,iy,182,22,3,3,'F');
+    doc.setTextColor(50,50,50);doc.setFontSize(8.5);doc.setFont('helvetica','normal');
+    doc.text('Endereco: '+(a.address||''),20,iy+7);
+    doc.text('OS: '+(a.protocol||'--')+'   Hidrometro: '+(a.meter||'--')+'   Leitura: '+(a.reading||'--')+' m3',20,iy+14);
+    if(a.date)doc.text('Data da leitura: '+a.date,20,iy+20);
+  }
+  const total=doc.getNumberOfPages();
+  for(let p=1;p<=total;p++){doc.setPage(p);addFooter(p,total);}
+  doc.save('relatorio-cmnc-'+new Date().toLocaleDateString('pt-BR').split('/').join('-')+'.pdf');
+  window.closeReview();toast('PDF gerado com sucesso!');
+};
+
+function updateMotoboySmartly(){
+  const vals=Object.values(addresses),pending=vals.filter(a=>a.status!=='done'),done=vals.filter(a=>a.status==='done'),list=document.getElementById('motoboy-list');
+  if(!list)return;if(!list.children.length){renderMotoboy();return;}
+  pending.forEach(a=>{
+    const isOpen=mbState.openId===a.id,cardEl=document.getElementById('acard-'+a.id);
+    if(!cardEl){const div=document.createElement('div');div.innerHTML=buildPending(a,false);list.insertBefore(div.firstElementChild,list.firstElementChild);createInputs(a);return;}
+    if(isOpen){const photos=a.photos||['','',''];photos.forEach((ph,si)=>updateSlot(a.id,si,ph));return;}
+    const tmp=document.createElement('div');tmp.innerHTML=buildPending(a,false);cardEl.replaceWith(tmp.firstElementChild);createInputs(a);
+  });
+  done.forEach(a=>{if(!document.getElementById('done-'+a.id)){const p=document.getElementById('acard-'+a.id);if(p)p.remove();const div=document.createElement('div');div.innerHTML=buildDone(a);list.appendChild(div.firstElementChild);}});
+  if(mbState.openId&&addresses[mbState.openId]&&addresses[mbState.openId].status==='done')mbState.openId=null;
+}
+function updateSlot(aid,si,ph){const slot=document.getElementById('slot-'+aid+'-'+si);if(!slot)return;if(ph){slot.classList.add('has-photo');slot.innerHTML='<img src="'+ph+'"><div class="photo-slot-label">'+SLOT_LABELS[si]+'</div><button class="del-btn" onclick="event.stopPropagation();removePhoto(''+aid+'','+si+')">&#10005;</button>';}else{slot.classList.remove('has-photo');slot.innerHTML='<div class="photo-slot-ph"><div class="ci">&#128247;</div><div class="sn">'+SLOT_LABELS[si]+'</div><div class="st">Toque para foto</div></div>';}}
+function buildPending(a,open){const photos=a.photos||['','',''],meter=mbState.meter[a.id]!==undefined?mbState.meter[a.id]:(a.meter||''),reading=mbState.reading[a.id]!==undefined?mbState.reading[a.id]:(a.reading||'');
+return '<div class="addr-card '+(open?'active':'')+'" id="acard-'+a.id+'"><div class="addr-top"><div><div class="addr-name">&#128205; '+a.address+'</div><div class="addr-meta">Protocolo: '+(a.protocol||'N/A')+'</div>'+(a.obs?'<div class="addr-obs">&#9888; '+a.obs+'</div>':'')+'</div><button class="expand-btn" id="ebtn-'+a.id+'" onclick="toggleForm(''+a.id+'')">'+(open?'Fechar &#9650;':'Preencher &#9660;')+'</button></div><div class="fill-form '+(open?'open':'')+'" id="form-'+a.id+'"><div class="fill-row"><div class="fill-group"><label>Numero do Hidrometro</label><input type="text" id="mm-'+a.id+'" placeholder="Ex: Y12L123456" value="'+meter+'" autocomplete="off" oninput="mbState.meter[''+a.id+'']=this.value"></div><div class="fill-group"><label>Leitura Atual (m3)</label><input type="number" id="mr-'+a.id+'" placeholder="Ex: 162663" value="'+reading+'" inputmode="numeric" oninput="mbState.reading[''+a.id+'']=this.value"></div></div><div style="font-size:13px;font-weight:700;color:#333;margin-bottom:6px">&#128247; Fotos <span style="font-weight:400;color:#888;font-size:12px;margin-left:6px">'+photos.filter(p=>p).length+'/3</span></div><div class="photo-slots">'+photos.map((ph,si)=>'<div class="photo-slot '+(ph?'has-photo':'')+'" id="slot-'+a.id+'-'+si+'" onclick="triggerPhoto(''+a.id+'','+si+')">'+(ph?'<img src="'+ph+'"><div class="photo-slot-label">'+SLOT_LABELS[si]+'</div><button class="del-btn" onclick="event.stopPropagation();removePhoto(''+a.id+'','+si+')">&#10005;</button>':'<div class="photo-slot-ph"><div class="ci">&#128247;</div><div class="sn">'+SLOT_LABELS[si]+'</div><div class="st">Toque para foto</div></div>')+'</div>').join('')+'</div><button class="submit-btn" id="sbtn-'+a.id+'" onclick="submitReading(''+a.id+'')">&#10003; Confirmar e Sincronizar</button></div></div>';}
+function buildDone(a){return '<div class="addr-card done" id="done-'+a.id+'"><div class="addr-top"><div><div class="addr-name" style="color:#1a6b2e;font-size:14px">&#10003; '+a.address+'</div><div class="addr-meta">Hidrometro: '+a.meter+' &bull; Leitura: '+a.reading+' m3 &bull; '+a.date+'</div></div><span class="badge badge-done">Concluido</span></div></div>';}
+function renderMotoboy(){const el=document.getElementById('motoboy-list'),vals=Object.values(addresses);if(!vals.length){el.innerHTML='<div class="empty-state"><div class="eicon">&#128237;</div><div>Nenhum endereco cadastrado.</div></div>';return;}const pending=vals.filter(a=>a.status!=='done'),done=vals.filter(a=>a.status==='done');let html='';if(!pending.length&&done.length)html='<div class="empty-state"><div class="eicon">&#127881;</div><div style="font-size:18px;font-weight:700;color:#1a6b2e">Tudo concluido!</div></div>';pending.forEach(a=>{html+=buildPending(a,mbState.openId===a.id);});done.forEach(a=>{html+=buildDone(a);});el.innerHTML=html;createAllInputs(pending);if(mbState.openId){setTimeout(()=>{const c=document.getElementById('acard-'+mbState.openId);if(c)c.scrollIntoView({behavior:'smooth',block:'start'});},100);}}
+function createAllInputs(addrs){document.getElementById('file-inputs').innerHTML='';addrs.forEach(a=>createInputs(a));}
+function createInputs(a){[0,1,2].forEach(si=>{if(document.getElementById('fi-'+a.id+'-'+si))return;const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.id='fi-'+a.id+'-'+si;inp.onchange=function(e){handlePhoto(e,a.id,si);};document.getElementById('file-inputs').appendChild(inp);});}
+window.toggleForm=function(id){if(mbState.openId===id){mbState.openId=null;const f=document.getElementById('form-'+id),c=document.getElementById('acard-'+id),b=document.getElementById('ebtn-'+id);if(f)f.classList.remove('open');if(c)c.classList.remove('active');if(b)b.innerHTML='Preencher &#9660;';}else{if(mbState.openId){const pf=document.getElementById('form-'+mbState.openId),pc=document.getElementById('acard-'+mbState.openId),pb=document.getElementById('ebtn-'+mbState.openId);if(pf)pf.classList.remove('open');if(pc)pc.classList.remove('active');if(pb)pb.innerHTML='Preencher &#9660;';}mbState.openId=id;const f=document.getElementById('form-'+id),c=document.getElementById('acard-'+id),b=document.getElementById('ebtn-'+id);if(f)f.classList.add('open');if(c)c.classList.add('active');if(b)b.innerHTML='Fechar &#9650;';setTimeout(()=>{if(c)c.scrollIntoView({behavior:'smooth',block:'start'});},100);}};
+window.triggerPhoto=function(aid,si){const mEl=document.getElementById('mm-'+aid),rEl=document.getElementById('mr-'+aid);if(mEl)mbState.meter[aid]=mEl.value;if(rEl)mbState.reading[aid]=rEl.value;const inp=document.getElementById('fi-'+aid+'-'+si);if(inp){inp.value='';inp.click();}};
+function handlePhoto(event,aid,si){const file=event.target.files[0];if(!file||!file.type.startsWith('image/')){alert('Selecione uma imagem.');return;}const reader=new FileReader();reader.onerror=()=>alert('Erro ao ler imagem.');reader.onload=function(e){const img=new Image();img.onload=function(){const canvas=document.createElement('canvas');const MAX=800;let w=img.width,h=img.height;if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);const compressed=canvas.toDataURL('image/jpeg',0.7);const a=addresses[aid];if(!a)return;if(!a.photos||a.photos.length<3)a.photos=['','',''];a.photos[si]=compressed;mbState.openId=aid;updateSlot(aid,si,compressed);const f=document.getElementById('form-'+aid),c=document.getElementById('acard-'+aid),b=document.getElementById('ebtn-'+aid);if(f&&!f.classList.contains('open'))f.classList.add('open');if(c&&!c.classList.contains('active'))c.classList.add('active');if(b)b.innerHTML='Fechar &#9650;';const mEl=document.getElementById('mm-'+aid),rEl=document.getElementById('mr-'+aid);if(mEl&&mbState.meter[aid]!==undefined)mEl.value=mbState.meter[aid];if(rEl&&mbState.reading[aid]!==undefined)rEl.value=mbState.reading[aid];setTimeout(()=>{if(c)c.scrollIntoView({behavior:'smooth',block:'start'});},150);writeAddr(aid,a);toast('Foto de '+SLOT_LABELS[si]+' salva!');};img.onerror=()=>alert('Imagem invalida.');img.src=e.target.result;};reader.readAsDataURL(file);}
+window.removePhoto=function(aid,si){const a=addresses[aid];if(!a)return;if(!a.photos)a.photos=['','',''];a.photos[si]='';updateSlot(aid,si,'');writeAddr(aid,a);};
+window.submitReading=async function(id){const a=addresses[id];if(!a)return;const mEl=document.getElementById('mm-'+id),rEl=document.getElementById('mr-'+id);const meter=(mEl?mEl.value:mbState.meter[id]||'').trim(),reading=(rEl?rEl.value:mbState.reading[id]||'').trim(),photos=a.photos||['','',''];if(!meter){alert('Informe o numero do hidrometro!');return;}if(!reading){alert('Informe a leitura!');return;}if(!photos.some(p=>p)){alert('Adicione pelo menos uma foto!');return;}const btn=document.getElementById('sbtn-'+id);if(btn){btn.disabled=true;btn.textContent='Sincronizando...';}a.meter=meter;a.reading=reading;a.status='done';a.date=new Date().toLocaleString('pt-BR');mbState.openId=null;delete mbState.meter[id];delete mbState.reading[id];await writeAddr(id,a);toast('Leitura sincronizada!');};
+window.addAddr=function(){const protocol=document.getElementById('np').value.trim(),address=document.getElementById('na').value.trim(),obs=document.getElementById('no').value.trim();if(!address){alert('Informe o endereco!');return;}const id=uid();writeAddr(id,{id,protocol,address,obs,status:'pending',meter:'',reading:'',photos:['','',''],date:null,selected:false});document.getElementById('np').value='';document.getElementById('na').value='';document.getElementById('no').value='';toast('Endereco adicionado!');};
+window.showBulk=()=>document.getElementById('bulk-modal').classList.add('open');
+window.closeBulk=()=>document.getElementById('bulk-modal').classList.remove('open');
+window.importBulk=function(){const lines=document.getElementById('bulk-text').value.split('\n').filter(l=>l.trim());let count=0;lines.forEach(line=>{const parts=line.split('|');let protocol='',address='';if(parts.length>=2){protocol=parts[0].trim();address=parts[1].trim();}else{address=line.trim();}if(address){const id=uid();writeAddr(id,{id,protocol,address,obs:'necessario fotos de hidrometros',status:'pending',meter:'',reading:'',photos:['','',''],date:null,selected:false});count++;}});document.getElementById('bulk-text').value='';window.closeBulk();toast(count+' enderecos importados!');};
+window.deleteAddr=function(id){if(!confirm('Remover?'))return;delete addresses[id];deleteAddrDb(id);};
+window.clearAll=function(){if(!confirm('Limpar TUDO?'))return;clearAllDb();};
+window.toggleSelect=function(id){if(!addresses[id])return;addresses[id].selected=!addresses[id].selected;updateStats();const row=document.getElementById('row-'+id);if(row)row.style.background=addresses[id].selected?'#f0faf0':'';document.getElementById('s-sel').textContent=Object.values(addresses).filter(a=>a.selected).length;};
+window.selectAll=function(){Object.keys(addresses).forEach(k=>addresses[k].selected=true);renderAdmin();updateStats();};
+window.deselectAll=function(){Object.keys(addresses).forEach(k=>addresses[k].selected=false);renderAdmin();updateStats();};
+window.toggleSelectAll=function(c){Object.keys(addresses).forEach(k=>addresses[k].selected=c);renderAdmin();updateStats();};
+function updateStats(){const vals=Object.values(addresses),done=vals.filter(a=>a.status==='done').length,sel=vals.filter(a=>a.selected).length;document.getElementById('s-total').textContent=vals.length;document.getElementById('s-pending').textContent=vals.length-done;document.getElementById('s-done').textContent=done;document.getElementById('s-sel').textContent=sel;}
+window.showView=function(v){currentView=v;document.getElementById('view-admin').classList.toggle('hidden',v!=='admin');document.getElementById('view-motoboy').classList.toggle('hidden',v!=='motoboy');document.getElementById('tab-admin').classList.toggle('active',v==='admin');document.getElementById('tab-motoboy').classList.toggle('active',v==='motoboy');if(v==='admin'){renderAdmin();updateStats();}if(v==='motoboy'){renderMotoboy();updateStats();}};
+window.openPh=function(id){const a=addresses[id];if(!a)return;document.getElementById('ph-modal-addr').textContent=a.address+(a.protocol?' ['+a.protocol+']':'');const photos=a.photos||['','',''],el=document.getElementById('ph-modal-grid');if(!photos.some(p=>p)){el.innerHTML='<p style="color:#aaa;font-size:13px">Nenhuma foto.</p>';}else{el.innerHTML=photos.map((p,i)=>p?'<div class="pitem-lg"><img src="'+p+'"><div class="plabel">'+SLOT_LABELS[i]+'</div></div>':'').join('');}document.getElementById('ph-modal').classList.add('open');};
+window.closePh=()=>document.getElementById('ph-modal').classList.remove('open');
+function renderAdmin(){const el=document.getElementById('admin-table'),vals=Object.values(addresses);if(!vals.length){el.innerHTML='<div class="empty-state"><div class="eicon">&#128205;</div><div>Nenhum endereco cadastrado.</div></div>';return;}let html='<table><thead><tr><th class="chk-col"><input type="checkbox" id="chk-all" onchange="toggleSelectAll(this.checked)"></th><th>OS</th><th>Endereco</th><th>Nr Hidrometro</th><th>Leitura m3</th><th>Fotos</th><th>Status</th><th>Data</th><th></th></tr></thead><tbody>';vals.forEach(a=>{const photos=a.photos||['','',''],thumbs=photos.filter(p=>p).map(p=>'<img class="thumb-sm" src="'+p+'">').join(''),pc=photos.filter(p=>p).length;html+='<tr id="row-'+a.id+'" style="'+(a.selected?'background:#f0faf0':'')+'"><td class="chk-col"><input type="checkbox" '+(a.selected?'checked':'')+' onchange="toggleSelect(''+a.id+'')"></td><td><strong style="font-size:12px">'+(a.protocol||'--')+'</strong></td><td style="max-width:220px;word-break:break-word;font-size:12px">'+a.address+(a.obs?'<br><span style="font-size:10px;color:#e65100">'+a.obs+'</span>':'')+'</td><td style="font-size:13px;font-weight:600;color:'+(a.meter?'#222':'#bbb')+'">'+(a.meter||'--')+'</td><td style="font-size:13px;font-weight:600;color:'+(a.reading?'#222':'#bbb')+'">'+(a.reading||'--')+'</td><td><div class="thumb-strip">'+thumbs+'<button class="btn btn-ghost btn-sm" onclick="openPh(''+a.id+'')" style="font-size:11px;padding:4px 8px">&#128247; '+pc+'/3</button></div></td><td><span class="badge '+(a.status==='done'?'badge-done':'badge-pending')+'">'+(a.status==='done'?'&#10003; Concluido':'&#9679; Pendente')+'</span></td><td style="font-size:11px;color:#888;white-space:nowrap">'+(a.date||'--')+'</td><td><button class="btn btn-red btn-sm" onclick="deleteAddr(''+a.id+'')">&#128465;</button></td></tr>';});html+='</tbody></table>';el.innerHTML=html;const ca=document.getElementById('chk-all');if(ca)ca.checked=vals.length>0&&vals.every(a=>a.selected);}
+window.mbState=mbState;
+</script>
+</body>
+</html>
