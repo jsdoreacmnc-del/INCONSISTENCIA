@@ -255,24 +255,37 @@ async function deleteAddrDb(id){try{await remove(ref(db,'cmnc/addresses/'+id));}
 async function clearAllDb(){try{await set(ref(db,'cmnc/addresses'),null);}catch(e){}}
 
 window.openReview = function(){
-  const selected=Object.values(addresses).filter(a=>a.selected);
+  var selected=Object.values(addresses).filter(function(a){return a.selected;});
   if(!selected.length){alert('Selecione pelo menos um endereco!');return;}
-  reviewData=selected.map(a=>JSON.parse(JSON.stringify(a)));
-  const hasPend=reviewData.some(a=>a.status!=='done');
-  const warn=document.getElementById('review-warn');
-  if(warn){warn.style.display=hasPend?'block':'none';if(hasPend)warn.textContent='Atencao: '+reviewData.filter(a=>a.status!=='done').length+' pendentes. O PDF sera gerado mesmo assim.';}
-  const tbody=document.getElementById('review-tbody'); tbody.innerHTML='';
-  reviewData.forEach((a,i)=>{
-    const photos=a.photos||['','',''];
-    const thumbs=photos.map((p,si)=>p?'<img class="review-thumb" src="'+p+'" title="'+SLOT_LABELS[si]+'" onclick="previewPhoto(''+a.id+'','+si+')">':'<div class="no-photo-slot">&#128247;</div>').join('');
-    const tr=document.createElement('tr');
-    tr.innerHTML='<td style="color:#aaa;font-size:12px;text-align:center">'+(i+1)+'</td>'+
-      '<td><input class="edit-input" id="rev-p-'+a.id+'" value="'+(a.protocol||'')+'" onchange="markChanged(this,''+a.id+'','protocol')" style="min-width:90px"></td>'+
-      '<td><input class="edit-input" id="rev-a-'+a.id+'" value="'+(a.address||'')+'" onchange="markChanged(this,''+a.id+'','address')" style="min-width:160px"></td>'+
-      '<td><input class="edit-input" id="rev-m-'+a.id+'" value="'+(a.meter||'')+'" onchange="markChanged(this,''+a.id+'','meter')" style="min-width:100px"></td>'+
-      '<td><input class="edit-input" id="rev-r-'+a.id+'" value="'+(a.reading||'')+'" onchange="markChanged(this,''+a.id+'','reading')" style="min-width:80px"></td>'+
-      '<td><div class="review-photos">'+thumbs+'</div></td>'+
-      '<td><span class="'+(a.status==='done'?'status-done-txt':'status-pend-txt')+'">'+(a.status==='done'?'OK':'Pend.')+'</span></td>';
+  reviewData=selected.map(function(a){return JSON.parse(JSON.stringify(a));});
+  var hasPend=reviewData.some(function(a){return a.status!=='done';});
+  var warn=document.getElementById('review-warn');
+  if(warn){warn.style.display=hasPend?'block':'none';if(hasPend)warn.textContent='Atencao: '+reviewData.filter(function(a){return a.status!=='done';}).length+' pendentes.';}
+  var tbody=document.getElementById('review-tbody');
+  tbody.innerHTML='';
+  reviewData.forEach(function(a,i){
+    var photos=a.photos||['','',''];
+    var tr=document.createElement('tr');
+    var td0=document.createElement('td');td0.style.cssText='color:#aaa;font-size:12px;text-align:center';td0.textContent=i+1;tr.appendChild(td0);
+    var fields=[['protocol','90px'],['address','160px'],['meter','100px'],['reading','80px']];
+    fields.forEach(function(fdef){
+      var field=fdef[0],minW=fdef[1];
+      var td=document.createElement('td');
+      var inp=document.createElement('input');
+      inp.className='edit-input';inp.id='rev-'+field[0]+'-'+a.id;inp.value=a[field]||'';inp.style.minWidth=minW;
+      inp.addEventListener('change',(function(fld,aid){return function(){this.classList.add('changed');var e=reviewData.find(function(x){return x.id===aid;});if(e)e[fld]=this.value;};})(field,a.id));
+      td.appendChild(inp);tr.appendChild(td);
+    });
+    var ptd=document.createElement('td');
+    var pdiv=document.createElement('div');pdiv.className='review-photos';
+    photos.forEach(function(p,si){
+      if(p){var img=document.createElement('img');img.className='review-thumb';img.src=p;img.title=SLOT_LABELS[si];img.addEventListener('click',(function(aid,sii){return function(){previewPhoto(aid,sii);};})(a.id,si));pdiv.appendChild(img);}
+      else{var ph=document.createElement('div');ph.className='no-photo-slot';ph.innerHTML='&#128247;';pdiv.appendChild(ph);}
+    });
+    ptd.appendChild(pdiv);tr.appendChild(ptd);
+    var std=document.createElement('td');var sp=document.createElement('span');
+    sp.className=a.status==='done'?'status-done-txt':'status-pend-txt';sp.textContent=a.status==='done'?'OK':'Pend.';
+    std.appendChild(sp);tr.appendChild(std);
     tbody.appendChild(tr);
   });
   document.getElementById('review-modal').classList.add('open');
