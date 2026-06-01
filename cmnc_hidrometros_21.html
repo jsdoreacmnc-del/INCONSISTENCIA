@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMNC II - Hidrometros</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4f0;min-height:100vh;}
+.nav{background:#1a6b2e;color:white;padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 10px rgba(0,0,0,.25);position:sticky;top:0;z-index:100;}
+.nlogo{width:46px;height:46px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#1a6b2e;font-weight:900;font-size:10px;text-align:center;line-height:1.3;}
+.ntitle{font-size:16px;font-weight:700;}
+.nsub{font-size:11px;opacity:.75;}
+.ntabs{margin-left:auto;display:flex;gap:8px;}
+.ntab{background:rgba(255,255,255,.15);border:none;color:white;padding:8px 18px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;}
+.ntab.on{background:white;color:#1a6b2e;}
+.sync{display:flex;align-items:center;gap:6px;font-size:12px;background:rgba(255,255,255,.15);padding:5px 12px;border-radius:20px;}
+.dot{width:8px;height:8px;border-radius:50%;background:#ff9800;flex-shrink:0;}
+.dot.on{background:#4caf50;animation:p 2s infinite;}
+.dot.err{background:#f44336;}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.main{max-width:1000px;margin:0 auto;padding:20px;}
+.hide{display:none!important;}
+.card{background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+.ctitle{font-size:15px;font-weight:700;color:#1a6b2e;margin-bottom:14px;}
+.sbar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.sbox{flex:1;min-width:70px;background:white;border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.07);}
+.snum{font-size:26px;font-weight:800;color:#1a6b2e;}
+.snum.or{color:#e65100;}.snum.bl{color:#1565c0;}
+.slbl{font-size:11px;color:#777;margin-top:2px;}
+.frow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.fg{flex:1;min-width:180px;}
+label{font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:4px;}
+input,textarea{width:100%;padding:9px 12px;border:1.5px solid #d0e8d0;border-radius:8px;font-size:14px;outline:none;}
+input:focus,textarea:focus{border-color:#1a6b2e;}
+.btn{padding:9px 18px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.bg{background:#1a6b2e;color:white;}.bg:hover{background:#145523;}
+.bb{background:#1565c0;color:white;}
+.br{background:#c62828;color:white;}
+.bsm{padding:5px 11px;font-size:12px;}
+.bo{background:transparent;border:2px solid #1a6b2e;color:#1a6b2e;}
+.bgh{background:#f5f5f5;color:#333;border:1.5px solid #ddd;}
+.twrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:720px;}
+th{background:#e8f5e9;color:#1a6b2e;padding:10px 8px;text-align:left;font-weight:700;white-space:nowrap;}
+td{padding:8px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+tr:hover td{background:#f9fef9;}
+.bdg{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+.bp{background:#fff3e0;color:#e65100;}.bd{background:#e8f5e9;color:#1a6b2e;}
+.chk{width:36px;text-align:center;}
+input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#1a6b2e;}
+.mbh{background:#1a6b2e;color:white;border-radius:12px;padding:16px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;}
+.mbsync{margin-left:auto;background:rgba(255,255,255,.2);padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
+.acard{background:white;border-radius:12px;padding:18px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.08);border-left:4px solid #e0e0e0;}
+.acard.done{border-left-color:#1a6b2e;background:#f9fff9;}
+.acard.act{border-left-color:#1565c0;box-shadow:0 4px 16px rgba(21,101,192,.15);}
+.atop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.aname{font-size:16px;font-weight:700;color:#222;}
+.amet{font-size:11px;color:#888;margin-top:3px;}
+.aobs{font-size:12px;color:#e65100;margin-top:4px;font-style:italic;}
+.xbtn{background:#f0faf0;border:1.5px solid #c8e6c9;color:#1a6b2e;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.ff{display:none;border-top:1px solid #f0f0f0;padding-top:16px;margin-top:14px;}
+.ff.open{display:block;}
+.ffl{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.ffg{flex:1;min-width:140px;}
+.ffg label{font-size:12px;font-weight:600;color:#444;margin-bottom:5px;display:block;}
+.ffg input{padding:12px;font-size:16px;}
+.pslots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
+.ps{border:2px dashed #b0d8b0;border-radius:10px;overflow:hidden;background:#f9fff9;cursor:pointer;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+.ps:hover{border-color:#1a6b2e;background:#f0faf0;}
+.ps.hp{border-color:#1a6b2e;border-style:solid;}
+.ps img{width:100%;height:110px;object-fit:cover;display:block;}
+.pslbl{font-size:10px;font-weight:700;color:#1a6b2e;text-align:center;padding:5px 4px;background:#e8f5e9;width:100%;text-transform:uppercase;}
+.psph{display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 8px;}
+.psph .ci{font-size:26px;}
+.psph .sn{font-size:11px;font-weight:700;color:#1a6b2e;text-align:center;text-transform:uppercase;}
+.psph .st{font-size:10px;color:#999;}
+.dbtn{position:absolute;top:4px;right:4px;background:rgba(198,40,40,.9);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;font-weight:700;z-index:10;display:flex;align-items:center;justify-content:center;}
+.sbtn{width:100%;padding:15px;font-size:16px;font-weight:700;background:#1a6b2e;color:white;border:none;border-radius:10px;cursor:pointer;margin-top:4px;}
+.sbtn:hover{background:#145523;}
+.sbtn:disabled{background:#a5d6a7;cursor:not-allowed;}
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;}
+.mov.open{display:flex;}
+.mod{background:white;border-radius:14px;padding:24px;max-width:900px;width:100%;margin:auto;}
+.modsm{max-width:500px!important;}
+.modtitle{font-size:17px;font-weight:700;color:#1a6b2e;margin-bottom:6px;}
+.modsub{font-size:13px;color:#666;margin-bottom:16px;}
+.ainfo{background:#e3f2fd;color:#1565c0;border-left:4px solid #1565c0;padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:13px;}
+.awarn{background:#fff8e1;color:#e65100;border-left:4px solid #ff9800;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;}
+.rtbl{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;}
+.rtbl th{background:#1a6b2e;color:white;padding:10px;text-align:left;font-size:12px;}
+.rtbl td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:middle;}
+.rtbl tr:nth-child(even) td{background:#f9fff9;}
+.einp{border:1.5px solid #d0e8d0;border-radius:6px;padding:6px 8px;font-size:13px;width:100%;outline:none;background:white;}
+.einp:focus{border-color:#1a6b2e;background:#f9fff9;}
+.einp.chg{border-color:#ff9800!important;background:#fff8e1!important;}
+.rph{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.rthumb{width:34px;height:34px;object-fit:cover;border-radius:5px;border:2px solid #b0d8b0;cursor:pointer;}
+.nps{width:34px;height:34px;border-radius:5px;border:2px dashed #ddd;display:flex;align-items:center;justify-content:center;font-size:10px;color:#ccc;}
+.sdt{color:#1a6b2e;font-weight:700;font-size:12px;}
+.spt{color:#e65100;font-weight:700;font-size:12px;}
+.pmg{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
+.pmg .pi{text-align:center;}
+.pmg .pi img{width:88px;height:88px;object-fit:cover;border-radius:8px;border:2px solid #d0e8d0;display:block;}
+.pmg .pi .pl{font-size:10px;color:#555;margin-top:3px;font-weight:600;text-transform:uppercase;}
+.tsm{width:28px;height:28px;object-fit:cover;border-radius:4px;border:1px solid #b0d8b0;}
+.tstrip{display:flex;gap:3px;align-items:center;}
+.empty{text-align:center;padding:36px 20px;color:#999;}
+.empty .ei{font-size:38px;margin-bottom:10px;}
+.sh{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.pa{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.rf{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding-top:16px;border-top:1px solid #eee;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a6b2e;color:white;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;box-shadow:0 4px 16px rgba(0,0,0,.2);pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}.toast.err{background:#c62828;}
+@media(max-width:500px){.nav{flex-wrap:wrap;gap:8px;}.ntabs{width:100%;}.ntab{flex:1;text-align:center;padding:8px 6px;font-size:12px;}.sync{display:none;}}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:#1a6b2e;display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-box{background:white;border-radius:20px;padding:40px 32px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3);}
+.login-logo{width:80px;height:80px;border-radius:50%;background:#1a6b2e;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:white;font-weight:900;font-size:18px;line-height:1.3;}
+.login-title{font-size:22px;font-weight:800;color:#1a6b2e;margin-bottom:6px;}
+.login-sub{font-size:13px;color:#888;margin-bottom:24px;}
+.login-tabs{display:flex;gap:0;margin-bottom:20px;border:2px solid #1a6b2e;border-radius:10px;overflow:hidden;}
+.ltab{flex:1;padding:10px;border:none;background:transparent;font-size:14px;font-weight:600;cursor:pointer;color:#1a6b2e;}
+.ltab.on{background:#1a6b2e;color:white;}
+.login-field{margin-bottom:14px;text-align:left;}
+.login-field label{font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px;}
+.login-field input{width:100%;padding:12px 14px;border:2px solid #d0e8d0;border-radius:10px;font-size:15px;outline:none;}
+.login-field input:focus{border-color:#1a6b2e;}
+.login-btn{width:100%;padding:14px;background:#1a6b2e;color:white;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;}
+.login-btn:hover{background:#145523;}
+.login-err{color:#c62828;font-size:13px;margin-top:10px;display:none;}
+/* STATS PANEL */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px;}
+.stat-card{background:white;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-left:4px solid #1a6b2e;}
+.stat-card.orange{border-left-color:#e65100;}
+.stat-card.blue{border-left-color:#1565c0;}
+.stat-card h3{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.stat-card .val{font-size:28px;font-weight:800;color:#1a6b2e;}
+.stat-card.orange .val{color:#e65100;}
+.stat-card.blue .val{color:#1565c0;}
+.stat-card .sub{font-size:11px;color:#aaa;margin-top:4px;}
+/* MOTOBOY TAG */
+.mb-tag{display:inline-flex;align-items:center;gap:5px;background:#e8f5e9;color:#1a6b2e;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:4px;}
+/* GPS TAG */
+.gps-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#888;margin-top:2px;}
+/* OFFLINE BANNER */
+.offline-banner{background:#ff9800;color:white;text-align:center;padding:8px;font-size:13px;font-weight:600;display:none;}
+.offline-banner.show{display:block;}
+/* HISTORY */
+.hist-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.hist-date{font-size:12px;font-weight:700;color:#555;min-width:90px;}
+.hist-track{flex:1;background:#e8f5e9;border-radius:20px;height:20px;position:relative;overflow:hidden;}
+.hist-fill{background:#1a6b2e;height:100%;border-radius:20px;transition:width .5s;}
+.hist-num{font-size:12px;color:#1a6b2e;font-weight:700;min-width:30px;text-align:right;}
+/* ANOMALY */
+.anomaly{background:#fff3e0;border:1.5px solid #ff9800;border-radius:8px;padding:8px 12px;font-size:12px;color:#e65100;margin-top:8px;display:none;}
+.anomaly.show{display:block;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="offline-banner" id="offline-banner">&#9888; Sem conexao - dados serao sincronizados quando reconectar</div>
+
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">CMNC<br>II</div>
+    <div class="login-title">CMNC II</div>
+    <div class="login-sub">Leitura de Hidrometros x SABESP</div>
+    <div class="login-tabs" style="flex-wrap:wrap;">
+      <button class="ltab on" id="ltab-adm" onclick="setLoginMode('admin')">&#128100; Admin</button>
+      <button class="ltab" id="ltab-mb" onclick="setLoginMode('motoboy')">&#128663; Hidrometro</button>
+      <button class="ltab" id="ltab-int" onclick="setLoginMode('interferencia')" style="border-top:1px solid #d0e8d0;">&#128260; Interferencia</button>
+    </div>
+    <div class="login-field" id="login-name-wrap" style="display:none">
+      <label id="login-name-lbl">Selecione seu usuario</label>
+      <select id="login-name" style="width:100%;padding:12px 14px;border:2px solid #d0e8d0;border-radius:10px;font-size:15px;outline:none;background:white;">
+        <option value="">-- Selecione --</option>
+        <option value="Geoinfra" class="opt-mb">Geoinfra</option>
+        <option value="Vistoria" class="opt-mb">Vistoria</option>
+        <option value="Cavalete" class="opt-mb">Cavalete</option>
+        <option value="Felipe" class="opt-int" style="display:none">Felipe</option>
+        <option value="Ana Lucia" class="opt-int" style="display:none">Ana Lucia</option>
+        <option value="Beatriz" class="opt-int" style="display:none">Beatriz</option>
+      </select>
+    </div>
+    <div class="login-field">
+      <label id="login-pass-lbl">Senha de acesso</label>
+      <input type="password" id="login-pass" placeholder="Digite a senha" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="login-err">Senha incorreta. Tente novamente.</div>
+    <div style="font-size:11px;color:#ccc;margin-top:16px">CMNC II &times; SABESP</div>
+  </div>
+</div>
+
+<nav class="nav">
+  <div class="nlogo">CMNC<br>II</div>
+  <div><div class="ntitle">Leitura de Hidrometros</div><div class="nsub">CMNC II &times; SABESP</div></div>
+  <div class="sync"><div class="dot" id="sdot"></div><span id="slbl">Conectando...</span></div>
+  <div class="ntabs">
+    <button class="ntab on" id="tadm" onclick="sv('admin')">&#128100; Admin</button>
+    <button class="ntab" id="tmb" onclick="sv('motoboy')">&#128663; Hidrometro</button>
+    <button class="ntab" id="tint" onclick="sv('interferencia')">&#128260; Interferencia</button>
+  </div>
+</nav>
+
+<div id="va" class="main">
+  <div class="sbar">
+    <div class="sbox"><div class="snum" id="st">0</div><div class="slbl">Total</div></div>
+    <div class="sbox"><div class="snum or" id="sp">0</div><div class="slbl">Pendentes</div></div>
+    <div class="sbox"><div class="snum" id="sd">0</div><div class="slbl">Concluidos</div></div>
+    <div class="sbox"><div class="snum bl" id="ss">0</div><div class="slbl">Selecionados</div></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">+ Novo Endereco</div>
+    <div class="frow">
+      <div class="fg" style="max-width:185px"><label>Protocolo/OS</label><input type="text" id="np" placeholder="Ex: 2614603386"></div>
+      <div class="fg" style="flex:3"><label>Endereco completo</label><input type="text" id="na" placeholder="Ex: RUA HUMBERTO I, 402, V MARIANA"></div>
+      <div class="fg"><label>Observacao</label><input type="text" id="no" placeholder="necessario fotos de hidrometros"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+      <button class="btn bg" onclick="addA()">Adicionar</button>
+      <button class="btn bo" onclick="showBulk()">&#128203; Em Lote</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sh">
+      <div class="ctitle" style="margin:0">Lista de Enderecos</div>
+      <div class="pa">
+        <button class="btn bb bsm" onclick="selAll()">Sel.Todos</button>
+        <button class="btn bgh bsm" onclick="deselAll()">Desmarcar</button>
+        <button class="btn bg bsm" onclick="openRev()">&#9997; Revisar e Gerar PDF</button>
+        <button class="btn br bsm" onclick="clearAll()">&#128465; Limpar</button>
+        <button class="btn bgh bsm" onclick="exportXLS()">&#128196; Excel</button>
+        <button class="btn bgh bsm" onclick="showHistory()">&#128202; Historico</button>
+      </div>
+    </div>
+    <div class="twrap"><div id="atbl"></div></div>
+  </div>
+</div>
+
+<div id="vm" class="main hide">
+  <div class="mbh">
+    <div style="font-size:32px">&#128663;</div>
+    <div><div style="font-size:17px;font-weight:700">Painel do Motoboy</div><div style="font-size:12px;opacity:.8;margin-top:2px">Preencha dados e fotos</div></div>
+    <div class="mbsync"><div class="dot" id="mdot"></div><span id="mlbl">Conectando...</span></div>
+  </div>
+  <div id="mlist"></div>
+</div>
+
+<div class="mov" id="bmod">
+  <div class="mod modsm">
+    <div class="modtitle">Em Lote</div>
+    <p style="font-size:13px;color:#666;margin-bottom:10px">Cole: <strong>PROTOCOLO | ENDERECO</strong></p>
+    <div class="ainfo">2614603386 | RUA HUMBERTO I, 402, V MARIANA</div>
+    <textarea id="btxt" style="height:140px;margin-bottom:12px" placeholder="Cole aqui..."></textarea>
+    <div style="display:flex;gap:8px"><button class="btn bg" onclick="importBulk()">Importar</button><button class="btn bo" onclick="closeBulk()">Cancelar</button></div>
+  </div>
+</div>
+
+<div class="mov" id="phmod">
+  <div class="mod modsm">
+    <div class="modtitle">Fotos</div>
+    <div id="phmaddr" style="font-size:13px;color:#555;margin-bottom:12px;padding:8px;background:#f0faf0;border-radius:8px;font-weight:600"></div>
+    <div class="pmg" id="phmgrid"></div>
+    <div style="margin-top:16px"><button class="btn bo" onclick="closePh()">Fechar</button></div>
+  </div>
+</div>
+
+<div class="mov" id="rmod">
+  <div class="mod">
+    <div class="modtitle">&#9997; Revisar antes de Gerar PDF</div>
+    <div class="modsub">Clique em qualquer campo para corrigir. Campos alterados ficam em laranja.</div>
+    <div id="rwarn" class="awarn" style="display:none"></div>
+    <div style="overflow-x:auto">
+      <table class="rtbl">
+        <thead><tr><th>#</th><th>OS</th><th>Endereco</th><th>Nr Hidrometro</th><th>Leitura m3</th><th>Fotos</th><th>Status</th></tr></thead>
+        <tbody id="rtbody"></tbody>
+      </table>
+    </div>
+    <div class="rf">
+      <button class="btn bo" onclick="closeRev()">Cancelar</button>
+      <button class="btn bg" onclick="genPDF()" style="font-size:15px;padding:12px 28px">&#128196; Gerar PDF</button>
+    </div>
+  </div>
+</div>
+
+
+
+<div id="vi" class="main hide">
+  <div class="mbh" style="background:#1565c0;">
+    <div style="font-size:32px">&#128260;</div>
+    <div>
+      <div style="font-size:17px;font-weight:700">Preservacao de Interferencia</div>
+      <div style="font-size:12px;opacity:.8;margin-top:2px">Registre a OS e fotos da interferencia</div>
+    </div>
+    <div class="mbsync"><div class="dot" id="idot"></div><span id="ilbl">Conectando...</span></div>
+  </div>
+  <div id="ilist"></div>
+</div>
+
+<div class="mov" id="histmod">
+  <div class="mod modsm">
+    <div class="modtitle">&#128202; Historico de Leituras</div>
+    <div class="modsub">Leituras realizadas por data</div>
+    <div id="hist-content"></div>
+    <div style="margin-top:16px"><button class="btn bo" onclick="closeHistory()">Fechar</button></div>
+  </div>
+</div>
+
+
+<div class="mov" id="int-bulk-mod">
+  <div class="mod modsm">
+    <div class="modtitle" style="color:#1565c0">&#128260; Adicionar em Lote - Interferencia</div>
+    <p style="font-size:13px;color:#666;margin-bottom:10px">Cole um por linha: <strong>OS | ENDERECO</strong></p>
+    <div class="ainfo">2614603386 | RUA HUMBERTO I, 402, V MARIANA<br>2615266555 | RUA LOEFGREEN, 2270, V CLEMENTINO</div>
+    <textarea id="int-bulk-txt" style="height:160px;margin-bottom:12px;width:100%;padding:10px;border:1.5px solid #d0e8d0;border-radius:8px;font-size:13px" placeholder="Cole aqui..."></textarea>
+    <div style="display:flex;gap:8px">
+      <button class="btn bsm" style="background:#e65100;color:white" onclick="importIntBulk()">Importar</button>
+      <button class="btn bo bsm" onclick="closeIntBulk()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="mov" id="int-rev-mod">
+  <div class="mod">
+    <div class="modtitle" style="color:#1565c0">&#128260; Revisar e Editar - Interferencia</div>
+    <div class="modsub">Clique em qualquer campo para corrigir. Campos alterados ficam em laranja.</div>
+    <div id="int-rev-warn" class="awarn" style="display:none"></div>
+    <div style="overflow-x:auto">
+      <table class="rtbl" id="int-rev-tbl">
+        <thead><tr>
+          <th class="chk" style="background:#1565c0"><input type="checkbox" id="int-chk-all" onchange="intTogSelAll(this.checked)"></th>
+          <th style="background:#1565c0">#</th>
+          <th style="background:#1565c0">OS</th>
+          <th style="background:#1565c0">Endereco</th>
+          <th style="background:#1565c0">Fotos</th>
+          <th style="background:#1565c0">Usuario</th>
+          <th style="background:#1565c0">Data</th>
+          <th style="background:#1565c0">Acoes</th>
+        </tr></thead>
+        <tbody id="int-rev-body"></tbody>
+      </table>
+    </div>
+    <div class="rf" style="gap:8px;flex-wrap:wrap">
+      <button class="btn bo bsm" onclick="closeIntRev()">Fechar</button>
+      <button class="btn bsm" style="background:#c62828;color:white" onclick="intDelSelected()">&#128465; Excluir Selecionados</button>
+      <button class="btn bsm" style="background:#1565c0;color:white" onclick="genIntXLS()">&#128196; Excel</button>
+      <button class="btn bsm" style="background:#1565c0;color:white" onclick="genIntPDF()">&#128196; Gerar PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="fi" style="display:none"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+const FC = {
+  apiKey: "AIzaSyB81yqQaDeOhrPKARU-mLBoVtxgCO2cUns",
+  authDomain: "cmnc-hidrometros.firebaseapp.com",
+  databaseURL: "https://cmnc-hidrometros-default-rtdb.firebaseio.com",
+  projectId: "cmnc-hidrometros",
+  storageBucket: "cmnc-hidrometros.firebasestorage.app",
+  messagingSenderId: "448064050754",
+  appId: "1:448064050754:web:2fef6b1329eb98707cffdb"
+};
+const app = initializeApp(FC);
+const db = getDatabase(app);
+const SL = ['Fachada','Nr Hidrometro','Leitura'];
+const G=[26,107,46],W=[255,255,255],L=[240,248,240];
+let addrs={}, cv='admin', rd=[];
+let mbs={oid:null,m:{},r:{}};
+
+function uid(){return 'i'+Date.now()+'_'+Math.floor(Math.random()*99999);}
+function toast(msg,t){const e=document.getElementById('toast');e.textContent=msg;e.className='toast show'+(t?' err':'');clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show');},3000);}
+function sync(on){
+  const c=on?'dot on':'dot err',l=on?'Online':'Sem conexao';
+  ['sdot','mdot','idot'].forEach(function(id){const e=document.getElementById(id);if(e)e.className=c;});
+  ['slbl','mlbl','ilbl'].forEach(function(id){const e=document.getElementById(id);if(e)e.textContent=l;});
+}
+
+onValue(ref(db,'cmnc/addresses'),function(snap){
+  const val=snap.val()||{};
+  const sel=new Set(Object.keys(addrs).filter(function(k){return addrs[k]&&addrs[k].sel;}));
+  addrs={};
+  Object.keys(val).forEach(function(k){addrs[k]=val[k];if(sel.has(k))addrs[k].sel=true;});
+  sync(true);
+  if(cv==='admin'){rAdmin();rStats();}
+  if(cv==='motoboy'){rMbSmart();rStats();}
+},function(){sync(false);toast('Erro Firebase',true);});
+
+async function wA(id,d){try{await set(ref(db,'cmnc/addresses/'+id),d);}catch(e){toast('Erro ao salvar',true);}}
+async function dA(id){try{await remove(ref(db,'cmnc/addresses/'+id));}catch(e){}}
+async function clrDb(){try{await set(ref(db,'cmnc/addresses'),null);}catch(e){}}
+
+window.sv=function(v){
+  cv=v;
+  document.getElementById('va').classList.toggle('hide',v!=='admin');
+  document.getElementById('vm').classList.toggle('hide',v!=='motoboy');
+  document.getElementById('vi').classList.toggle('hide',v!=='interferencia');
+  document.getElementById('tadm').classList.toggle('on',v==='admin');
+  document.getElementById('tmb').classList.toggle('on',v==='motoboy');
+  // Always show all 3 tabs for everyone
+  if(v==='admin'){rAdmin();rStats();}
+  if(v==='motoboy'){rMb();rStats();}
+  if(v==='interferencia'){rInt();}
+};
+
+window.addA=function(){
+  const p=document.getElementById('np').value.trim();
+  const a=document.getElementById('na').value.trim();
+  const o=document.getElementById('no').value.trim();
+  if(!a){alert('Informe o endereco!');return;}
+  const id=uid();
+  wA(id,{id:id,protocol:p,address:a,obs:o,status:'pending',meter:'',reading:'',photos:['','',''],date:null,sel:false});
+  document.getElementById('np').value='';
+  document.getElementById('na').value='';
+  document.getElementById('no').value='';
+  toast('Endereco adicionado!');
+};
+
+window.showBulk=function(){document.getElementById('bmod').classList.add('open');};
+window.closeBulk=function(){document.getElementById('bmod').classList.remove('open');};
+window.importBulk=function(){
+  const lines=document.getElementById('btxt').value.split('\n').filter(function(l){return l.trim();});
+  let cnt=0;
+  lines.forEach(function(line){
+    const parts=line.split('|');
+    let p='',a='';
+    if(parts.length>=2){p=parts[0].trim();a=parts[1].trim();}else{a=line.trim();}
+    if(a){const id=uid();wA(id,{id:id,protocol:p,address:a,obs:'necessario fotos de hidrometros',status:'pending',meter:'',reading:'',photos:['','',''],date:null,sel:false});cnt++;}
+  });
+  document.getElementById('btxt').value='';
+  window.closeBulk();
+  toast(cnt+' enderecos importados!');
+};
+
+window.delA=function(id){if(!confirm('Remover?'))return;delete addrs[id];dA(id);};
+window.clearAll=function(){if(!confirm('Limpar TUDO?'))return;clrDb();};
+
+window.togSel=function(id){
+  if(!addrs[id])return;
+  addrs[id].sel=!addrs[id].sel;
+  rStats();
+  const row=document.getElementById('row'+id);
+  if(row)row.style.background=addrs[id].sel?'#f0faf0':'';
+  document.getElementById('ss').textContent=Object.values(addrs).filter(function(a){return a.sel;}).length;
+};
+window.selAll=function(){Object.keys(addrs).forEach(function(k){addrs[k].sel=true;});rAdmin();rStats();};
+window.deselAll=function(){Object.keys(addrs).forEach(function(k){addrs[k].sel=false;});rAdmin();rStats();};
+window.togSelAll=function(c){Object.keys(addrs).forEach(function(k){addrs[k].sel=c;});rAdmin();rStats();};
+
+function rStats(){
+  const v=Object.values(addrs);
+  const dn=v.filter(function(a){return a.status==='done';}).length;
+  const sl=v.filter(function(a){return a.sel;}).length;
+  document.getElementById('st').textContent=v.length;
+  document.getElementById('sp').textContent=v.length-dn;
+  document.getElementById('sd').textContent=dn;
+  document.getElementById('ss').textContent=sl;
+}
+
+window.openPh=function(id){
+  const a=addrs[id];if(!a)return;
+  document.getElementById('phmaddr').textContent=a.address+(a.protocol?' ['+a.protocol+']':'');
+  const ph=a.photos||['','',''];
+  const el=document.getElementById('phmgrid');
+  if(!ph.some(function(p){return p;})){el.innerHTML='<p style="color:#aaa">Nenhuma foto.</p>';return;}
+  el.innerHTML='';
+  ph.forEach(function(p,i){
+    if(!p)return;
+    const d=document.createElement('div');d.className='pi';
+    const img=document.createElement('img');img.src=p;
+    const lbl=document.createElement('div');lbl.className='pl';lbl.textContent=SL[i];
+    d.appendChild(img);d.appendChild(lbl);
+    el.appendChild(d);
+  });
+  document.getElementById('phmod').classList.add('open');
+};
+window.closePh=function(){document.getElementById('phmod').classList.remove('open');};
+
+function rAdmin(){
+  const el=document.getElementById('atbl');
+  const vals=Object.values(addrs);
+  if(!vals.length){
+    el.innerHTML='<div class="empty"><div class="ei">&#128205;</div><div>Nenhum endereco cadastrado.</div></div>';
+    return;
+  }
+  const tbl=document.createElement('table');
+  const thead=tbl.createTHead();
+  const hr=thead.insertRow();
+  ['','OS','Endereco','Nr Hidrometro','Leitura m3','Fotos','Status','Motoboy','Data',''].forEach(function(h,i){
+    const th=document.createElement('th');
+    if(i===0){const chk=document.createElement('input');chk.type='checkbox';chk.id='chkall';chk.onchange=function(){window.togSelAll(this.checked);};th.appendChild(chk);}
+    else{th.textContent=h;}
+    if(i===0)th.className='chk';
+    hr.appendChild(th);
+  });
+  const tbody=tbl.createTBody();
+  vals.forEach(function(a){
+    const tr=tbody.insertRow();
+    tr.id='row'+a.id;
+    if(a.sel)tr.style.background='#f0faf0';
+    const photos=a.photos||['','',''];
+    const pc=photos.filter(function(p){return p;}).length;
+    // Checkbox
+    const tc=tr.insertCell();tc.className='chk';
+    const chk=document.createElement('input');chk.type='checkbox';if(a.sel)chk.checked=true;
+    chk.onchange=(function(id){return function(){window.togSel(id);};})(a.id);
+    tc.appendChild(chk);
+    // OS
+    const tos=tr.insertCell();tos.innerHTML='<strong style="font-size:12px">'+(a.protocol||'--')+'</strong>';
+    // Address
+    const tad=tr.insertCell();tad.style.cssText='max-width:220px;word-break:break-word;font-size:12px';
+    tad.textContent=a.address;
+    if(a.obs){const s=document.createElement('span');s.style.cssText='font-size:10px;color:#e65100;display:block';s.textContent=a.obs;tad.appendChild(s);}
+    // Meter
+    const tm=tr.insertCell();tm.style.cssText='font-size:13px;font-weight:600;color:'+(a.meter?'#222':'#bbb');tm.textContent=a.meter||'--';
+    // Reading
+    const tr2=tr.insertCell();tr2.style.cssText='font-size:13px;font-weight:600;color:'+(a.reading?'#222':'#bbb');tr2.textContent=a.reading||'--';
+    // Photos
+    const tp=tr.insertCell();
+    const ts=document.createElement('div');ts.className='tstrip';
+    photos.filter(function(p){return p;}).forEach(function(p){const img=document.createElement('img');img.className='tsm';img.src=p;ts.appendChild(img);});
+    const pb=document.createElement('button');pb.className='btn bgh bsm';pb.style.cssText='font-size:11px;padding:4px 8px';pb.textContent='Fotos '+pc+'/3';
+    pb.onclick=(function(id){return function(){window.openPh(id);};})(a.id);
+    ts.appendChild(pb);tp.appendChild(ts);
+    // Status
+    const tst=tr.insertCell();
+    const bdg=document.createElement('span');bdg.className='bdg '+(a.status==='done'?'bd':'bp');bdg.textContent=a.status==='done'?'Concluido':'Pendente';
+    tst.appendChild(bdg);
+    // Date
+    const tdt=tr.insertCell();tdt.style.cssText='font-size:11px;color:#888;white-space:nowrap';tdt.textContent=a.date||'--';
+    const tmb2=tr.insertCell();tmb2.style.cssText='font-size:11px;color:#1a6b2e;font-weight:600;white-space:nowrap';tmb2.textContent=a.motoboy||'--';
+    // Delete
+    const tdl=tr.insertCell();
+    const db2=document.createElement('button');db2.className='btn br bsm';db2.textContent='X';
+    db2.onclick=(function(id){return function(){window.delA(id);};})(a.id);
+    tdl.appendChild(db2);
+  });
+  el.innerHTML='';el.appendChild(tbl);
+  const ca=document.getElementById('chkall');
+  if(ca)ca.checked=vals.length>0&&vals.every(function(a){return a.sel;});
+}
+
+// REVIEW
+window.openRev=function(){
+  const sel=Object.values(addrs).filter(function(a){return a.sel;});
+  if(!sel.length){alert('Selecione pelo menos um endereco!');return;}
+  rd=sel.map(function(a){return JSON.parse(JSON.stringify(a));});
+  const hp=rd.some(function(a){return a.status!=='done';});
+  const warn=document.getElementById('rwarn');
+  warn.style.display=hp?'block':'none';
+  if(hp)warn.textContent='Atencao: '+rd.filter(function(a){return a.status!=='done';}).length+' pendentes.';
+  const tbody=document.getElementById('rtbody');
+  tbody.innerHTML='';
+  rd.forEach(function(a,i){
+    const photos=a.photos||['','',''];
+    const tr=tbody.insertRow();
+    // #
+    const t0=tr.insertCell();t0.style.cssText='color:#aaa;font-size:12px;text-align:center';t0.textContent=i+1;
+    // Editable fields
+    [['protocol','90px'],['address','160px'],['meter','100px'],['reading','80px']].forEach(function(f){
+      const td=tr.insertCell();
+      const inp=document.createElement('input');
+      inp.className='einp';
+      inp.value=a[f[0]]||'';
+      inp.style.minWidth=f[1];
+      inp.addEventListener('change',(function(fld,aid){
+        return function(){
+          this.classList.add('chg');
+          const en=rd.find(function(x){return x.id===aid;});
+          if(en)en[fld]=this.value;
+        };
+      })(f[0],a.id));
+      td.appendChild(inp);
+    });
+    // Photos
+    const tp=tr.insertCell();
+    const pd=document.createElement('div');pd.className='rph';
+    photos.forEach(function(p,si){
+      if(p){
+        const img=document.createElement('img');img.className='rthumb';img.src=p;img.title=SL[si];
+        img.onclick=(function(aid,sii){return function(){previewRevPh(aid,sii);};})(a.id,si);
+        pd.appendChild(img);
+      }else{
+        const ph=document.createElement('div');ph.className='nps';ph.textContent='?';pd.appendChild(ph);
+      }
+    });
+    tp.appendChild(pd);
+    // Status
+    const ts=tr.insertCell();
+    const sp=document.createElement('span');sp.className=a.status==='done'?'sdt':'spt';sp.textContent=a.status==='done'?'OK':'Pend.';
+    ts.appendChild(sp);
+  });
+  document.getElementById('rmod').classList.add('open');
+};
+
+function previewRevPh(id,si){
+  const a=rd.find(function(x){return x.id===id;});if(!a)return;
+  const photos=a.photos||['','',''];
+  document.getElementById('phmaddr').textContent=a.address;
+  const el=document.getElementById('phmgrid');el.innerHTML='';
+  photos.forEach(function(p,i){
+    if(!p)return;
+    const d=document.createElement('div');d.className='pi';
+    const img=document.createElement('img');img.src=p;
+    const lbl=document.createElement('div');lbl.className='pl';lbl.textContent=SL[i];
+    d.appendChild(img);d.appendChild(lbl);el.appendChild(d);
+  });
+  document.getElementById('phmod').classList.add('open');
+}
+
+window.closeRev=function(){document.getElementById('rmod').classList.remove('open');};
+
+window.genPDF=async function(){
+  if(!rd.length){alert('Abra a revisao primeiro!');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  function hdr(t1,t2,t3){
+    doc.setFillColor(G[0],G[1],G[2]);doc.rect(0,0,210,46,'F');
+    doc.setFillColor(255,255,255);doc.circle(22,22,14,'F');
+    doc.setTextColor(G[0],G[1],G[2]);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text('CMNC',22,20,{align:'center'});doc.text('II',22,27,{align:'center'});
+    doc.setTextColor(W[0],W[1],W[2]);doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text(t1,130,15,{align:'center'});
+    if(t2){doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(t2,130,24,{align:'center'});}
+    if(t3){doc.setFontSize(8);doc.text(t3,130,32,{align:'center'});}
+  }
+  function ftr(p,tot){
+    doc.setFillColor(G[0],G[1],G[2]);doc.rect(0,285,210,12,'F');
+    doc.setFillColor(255,255,255);doc.circle(12,291,5,'F');
+    doc.setTextColor(G[0],G[1],G[2]);doc.setFontSize(5.5);doc.setFont('helvetica','bold');
+    doc.text('CMNC',12,290,{align:'center'});doc.text('II',12,294,{align:'center'});
+    doc.setTextColor(W[0],W[1],W[2]);doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text('CMNC II x SABESP - Relatorio de Leitura de Hidrometros',115,293,{align:'center'});
+    doc.text('Pag. '+p+'/'+tot,200,293,{align:'right'});
+  }
+  hdr('RELATORIO DE LEITURA DE HIDROMETROS','CMNC II x SABESP - Controle de Leituras','Gerado em: '+new Date().toLocaleString('pt-BR'));
+  let y=54;
+  doc.setFillColor(L[0],L[1],L[2]);doc.roundedRect(14,y,182,18,3,3,'F');
+  doc.setTextColor(50,50,50);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text('Total: '+rd.length+'   Concluidos: '+rd.filter(function(a){return a.status==='done';}).length,22,y+7);
+  doc.text('Data: '+new Date().toLocaleDateString('pt-BR'),22,y+14);
+  y+=26;
+  doc.setFillColor(G[0],G[1],G[2]);doc.rect(14,y,182,8,'F');
+  doc.setTextColor(W[0],W[1],W[2]);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+  doc.text('OS',17,y+5.5);doc.text('Endereco',40,y+5.5);doc.text('Nr Hidrometro',122,y+5.5);doc.text('Leitura m3',152,y+5.5);doc.text('Status',183,y+5.5);
+  y+=8;
+  rd.forEach(function(a,i){
+    if(y>272){
+      doc.addPage();hdr('RELATORIO (cont.)','CMNC II x SABESP','');y=54;
+      doc.setFillColor(G[0],G[1],G[2]);doc.rect(14,y,182,8,'F');
+      doc.setTextColor(W[0],W[1],W[2]);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+      doc.text('OS',17,y+5.5);doc.text('Endereco',40,y+5.5);doc.text('Nr Hidrometro',122,y+5.5);doc.text('Leitura m3',152,y+5.5);doc.text('Status',183,y+5.5);y+=8;
+    }
+    if(i%2===0){doc.setFillColor(245,252,245);doc.rect(14,y,182,10,'F');}
+    doc.setTextColor(50,50,50);doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+    const sa=(a.address||'').length>46?(a.address||'').substring(0,44)+'...':(a.address||'');
+    doc.text(a.protocol||'--',17,y+6.5);doc.text(sa,40,y+6.5);
+    doc.text(a.meter||'--',122,y+6.5);doc.text(a.reading||'--',152,y+6.5);
+    if(a.status==='done'){doc.setTextColor(26,107,46);}else{doc.setTextColor(230,81,0);}
+    doc.text(a.status==='done'?'Concluido':'Pendente',183,y+6.5);
+    doc.setTextColor(50,50,50);y+=10;
+  });
+  var dStr=new Date().toLocaleDateString('pt-BR');
+  var dSafe=dStr.split('/').join('-');
+  for(let ai=0;ai<rd.length;ai++){
+    const a=rd[ai];
+    const photos=a.photos||['','',''];
+    if(!photos.some(function(p){return p;}))continue;
+    doc.addPage();
+    const addrS=(a.address||'').length>40?(a.address||'').substring(0,38)+'...':(a.address||'');
+    hdr('FOTOS - '+addrS,'OS: '+(a.protocol||'--')+'  Hid: '+(a.meter||'--')+'  Leit: '+(a.reading||'--')+' m3','Data: '+(a.date||dStr));
+    const sw=56,sh=72,sx=14,sy=54,gap=8;
+    for(let si=0;si<3;si++){
+      const ph=photos[si];
+      const px=sx+si*(sw+gap);
+      doc.setFillColor(L[0],L[1],L[2]);doc.roundedRect(px,sy,sw,sh+10,2,2,'F');
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(G[0],G[1],G[2]);
+      doc.text(SL[si],px+sw/2,sy+6,{align:'center'});
+      if(ph){try{doc.addImage(ph,'JPEG',px+2,sy+9,sw-4,sh-2);}catch(e){doc.setFillColor(200,220,200);doc.rect(px+2,sy+9,sw-4,sh-2,'F');}}
+      else{doc.setFillColor(230,230,230);doc.rect(px+2,sy+9,sw-4,sh-2,'F');doc.setTextColor(180,180,180);doc.setFontSize(8);doc.text('Sem foto',px+sw/2,sy+sh/2+9,{align:'center'});}
+    }
+    const iy=sy+sh+18;
+    doc.setFillColor(L[0],L[1],L[2]);doc.roundedRect(14,iy,182,22,3,3,'F');
+    doc.setTextColor(50,50,50);doc.setFontSize(8.5);doc.setFont('helvetica','normal');
+    doc.text('Endereco: '+(a.address||''),20,iy+7);
+    doc.text('OS: '+(a.protocol||'--')+'  Hid: '+(a.meter||'--')+'  Leit: '+(a.reading||'--')+' m3',20,iy+14);
+    if(a.date)doc.text('Data: '+a.date,20,iy+20);
+  }
+  const tot=doc.getNumberOfPages();
+  for(let p=1;p<=tot;p++){doc.setPage(p);ftr(p,tot);}
+  doc.save('relatorio-cmnc-'+dSafe+'.pdf');
+  window.closeRev();
+  toast('PDF gerado!');
+};
+
+// MOTOBOY
+function uSlot(aid,si,ph){
+  const slot=document.getElementById('sl'+aid+si);
+  if(!slot)return;
+  slot.innerHTML='';
+  if(ph){
+    slot.classList.add('hp');
+    const img=document.createElement('img');img.src=ph;slot.appendChild(img);
+    const lbl=document.createElement('div');lbl.className='pslbl';lbl.textContent=SL[si];slot.appendChild(lbl);
+    const db2=document.createElement('button');db2.className='dbtn';db2.textContent='X';
+    db2.onclick=(function(a,s){return function(ev){ev.stopPropagation();rmPhoto(a,s);};})(aid,si);
+    slot.appendChild(db2);
+  }else{
+    slot.classList.remove('hp');
+    const ph2=document.createElement('div');ph2.className='psph';
+    const ci=document.createElement('div');ci.className='ci';ci.textContent='\u{1F4F7}';
+    const sn=document.createElement('div');sn.className='sn';sn.textContent=SL[si];
+    const st=document.createElement('div');st.className='st';st.textContent='Toque para foto';
+    ph2.appendChild(ci);ph2.appendChild(sn);ph2.appendChild(st);
+    slot.appendChild(ph2);
+  }
+}
+
+function bldPend(a,open){
+  const card=document.createElement('div');
+  card.className='acard'+(open?' act':'');
+  card.id='ac'+a.id;
+  const top=document.createElement('div');top.className='atop';
+  const info=document.createElement('div');
+  const nm=document.createElement('div');nm.className='aname';nm.textContent='\u{1F4CD} '+a.address;
+  const mt=document.createElement('div');mt.className='amet';mt.textContent='Protocolo: '+(a.protocol||'N/A');
+  info.appendChild(nm);info.appendChild(mt);
+  if(a.obs){const ob=document.createElement('div');ob.className='aobs';ob.textContent='\u26A0 '+a.obs;info.appendChild(ob);}
+  const xb=document.createElement('button');xb.className='xbtn';xb.id='eb'+a.id;
+  xb.textContent=open?'Fechar':'Preencher';
+  xb.onclick=(function(id){return function(){togForm(id);};})(a.id);
+  top.appendChild(info);top.appendChild(xb);card.appendChild(top);
+  const form=document.createElement('div');form.className='ff'+(open?' open':'');form.id='fm'+a.id;
+  const frow=document.createElement('div');frow.className='ffl';
+  const mg=document.createElement('div');mg.className='ffg';
+  const ml=document.createElement('label');ml.textContent='Numero do Hidrometro';
+  const mi=document.createElement('input');mi.type='text';mi.id='mm'+a.id;
+  mi.value=mbs.m[a.id]!==undefined?mbs.m[a.id]:(a.meter||'');
+  mi.placeholder='Ex: Y12L123456';mi.autocomplete='off';
+  mi.oninput=(function(id){return function(){mbs.m[id]=this.value;};})(a.id);
+  mg.appendChild(ml);mg.appendChild(mi);
+  const rg=document.createElement('div');rg.className='ffg';
+  const rl=document.createElement('label');rl.textContent='Leitura Atual (m3)';
+  const ri=document.createElement('input');ri.type='number';ri.id='mr'+a.id;
+  ri.value=mbs.r[a.id]!==undefined?mbs.r[a.id]:(a.reading||'');
+  ri.placeholder='Ex: 162663';ri.setAttribute('inputmode','numeric');
+  ri.oninput=(function(id){return function(){mbs.r[id]=this.value;};})(a.id);
+  rg.appendChild(rl);rg.appendChild(ri);
+  frow.appendChild(mg);frow.appendChild(rg);form.appendChild(frow);
+  const flbl=document.createElement('div');flbl.style.cssText='font-size:13px;font-weight:700;color:#333;margin-bottom:6px';
+  const photos=a.photos||['','',''];
+  flbl.textContent='Fotos '+photos.filter(function(p){return p;}).length+'/3';
+  form.appendChild(flbl);
+  const slots=document.createElement('div');slots.className='pslots';
+  for(let si=0;si<3;si++){
+    const sl=document.createElement('div');
+    sl.id='sl'+a.id+si;
+    sl.className='ps'+(photos[si]?' hp':'');
+    sl.onclick=(function(id,sii){return function(){trigPhoto(id,sii);};})(a.id,si);
+    if(photos[si]){
+      const img=document.createElement('img');img.src=photos[si];sl.appendChild(img);
+      const lbl=document.createElement('div');lbl.className='pslbl';lbl.textContent=SL[si];sl.appendChild(lbl);
+      const db2=document.createElement('button');db2.className='dbtn';db2.textContent='X';
+      db2.onclick=(function(id,sii){return function(ev){ev.stopPropagation();rmPhoto(id,sii);};})(a.id,si);
+      sl.appendChild(db2);
+    }else{
+      const ph2=document.createElement('div');ph2.className='psph';
+      const ci=document.createElement('div');ci.className='ci';ci.innerHTML='&#128247;';
+      const sn=document.createElement('div');sn.className='sn';sn.textContent=SL[si];
+      const st=document.createElement('div');st.className='st';st.textContent='Toque para foto';
+      ph2.appendChild(ci);ph2.appendChild(sn);ph2.appendChild(st);sl.appendChild(ph2);
+    }
+    slots.appendChild(sl);
+  }
+  form.appendChild(slots);
+  const sb=document.createElement('button');sb.className='sbtn';sb.id='sb'+a.id;
+  sb.innerHTML='&#10003; Confirmar e Sincronizar';
+  sb.onclick=(function(id){return function(){subReadingEnhanced(id);};})(a.id);
+  form.appendChild(sb);
+  card.appendChild(form);
+  return card;
+}
+
+function bldDone(a){
+  const card=document.createElement('div');card.className='acard done';card.id='dn'+a.id;
+  const top=document.createElement('div');top.className='atop';
+  const info=document.createElement('div');
+  const nm=document.createElement('div');nm.className='aname';nm.style.cssText='color:#1a6b2e;font-size:14px';
+  nm.innerHTML='&#10003; '+a.address;
+  const mt=document.createElement('div');mt.className='amet';
+  mt.textContent='Hidrometro: '+a.meter+' - Leitura: '+a.reading+' m3 - '+a.date;
+  if(a.motoboy){const mbt=document.createElement('div');mbt.className='mb-tag';mbt.innerHTML='&#128663; '+a.motoboy;info.appendChild(mbt);}
+  if(a.gps){const gpt=document.createElement('div');gpt.className='gps-tag';gpt.innerHTML='&#127757; '+a.gps.lat+', '+a.gps.lng;info.appendChild(gpt);}
+  info.appendChild(nm);info.appendChild(mt);
+  const bdg=document.createElement('span');bdg.className='bdg bd';bdg.textContent='Concluido';
+  top.appendChild(info);top.appendChild(bdg);card.appendChild(top);
+  return card;
+}
+
+function rMb(){
+  const el=document.getElementById('mlist');
+  const vals=Object.values(addrs);
+  if(!vals.length){el.innerHTML='<div class="empty"><div class="ei">&#128237;</div><div>Nenhum endereco.</div></div>';return;}
+  el.innerHTML='';
+  const pend=vals.filter(function(a){return a.status!=='done';});
+  const done=vals.filter(function(a){return a.status==='done';});
+  if(!pend.length&&done.length){
+    const d=document.createElement('div');d.className='empty';
+    d.innerHTML='<div class="ei">&#127881;</div><div style="font-size:18px;font-weight:700;color:#1a6b2e">Tudo concluido!</div>';
+    el.appendChild(d);
+  }
+  pend.forEach(function(a){el.appendChild(bldPend(a,mbs.oid===a.id));});
+  done.forEach(function(a){el.appendChild(bldDone(a));});
+  mkInputs(pend);
+  if(mbs.oid){setTimeout(function(){const c=document.getElementById('ac'+mbs.oid);if(c)c.scrollIntoView({behavior:'smooth',block:'start'});},100);}
+}
+
+function rMbSmart(){
+  const vals=Object.values(addrs);
+  const pend=vals.filter(function(a){return a.status!=='done';});
+  const done=vals.filter(function(a){return a.status==='done';});
+  const list=document.getElementById('mlist');
+  if(!list)return;
+  if(!list.children.length){rMb();return;}
+  pend.forEach(function(a){
+    const isOpen=mbs.oid===a.id;
+    const ce=document.getElementById('ac'+a.id);
+    if(!ce){list.insertBefore(bldPend(a,false),list.firstChild);mkInputsFor(a);return;}
+    if(isOpen){const photos=a.photos||['','',''];for(let si=0;si<3;si++)uSlot(a.id,si,photos[si]);return;}
+    const newCard=bldPend(a,false);ce.replaceWith(newCard);mkInputsFor(a);
+  });
+  done.forEach(function(a){
+    if(!document.getElementById('dn'+a.id)){
+      const pe=document.getElementById('ac'+a.id);if(pe)pe.remove();
+      list.appendChild(bldDone(a));
+    }
+  });
+  if(mbs.oid&&addrs[mbs.oid]&&addrs[mbs.oid].status==='done')mbs.oid=null;
+}
+
+function mkInputs(addrs2){document.getElementById('fi').innerHTML='';addrs2.forEach(function(a){mkInputsFor(a);});}
+function mkInputsFor(a){
+  for(let si=0;si<3;si++){
+    if(document.getElementById('fi'+a.id+si))continue;
+    const inp=document.createElement('input');
+    inp.type='file';inp.accept='image/*';inp.id='fi'+a.id+si;
+    inp.onchange=(function(id,sii){return function(e){hdlPhoto(e,id,sii);};})(a.id,si);
+    document.getElementById('fi').appendChild(inp);
+  }
+}
+
+function togForm(id){
+  if(mbs.oid===id){
+    mbs.oid=null;
+    const f=document.getElementById('fm'+id),c=document.getElementById('ac'+id),b=document.getElementById('eb'+id);
+    if(f)f.classList.remove('open');if(c)c.classList.remove('act');if(b)b.textContent='Preencher';
+  }else{
+    if(mbs.oid){
+      const pf=document.getElementById('fm'+mbs.oid),pc=document.getElementById('ac'+mbs.oid),pb=document.getElementById('eb'+mbs.oid);
+      if(pf)pf.classList.remove('open');if(pc)pc.classList.remove('act');if(pb)pb.textContent='Preencher';
+    }
+    mbs.oid=id;
+    const f=document.getElementById('fm'+id),c=document.getElementById('ac'+id),b=document.getElementById('eb'+id);
+    if(f)f.classList.add('open');if(c)c.classList.add('act');if(b)b.textContent='Fechar';
+    setTimeout(function(){if(c)c.scrollIntoView({behavior:'smooth',block:'start'});},100);
+  }
+}
+
+function trigPhoto(aid,si){
+  const mEl=document.getElementById('mm'+aid),rEl=document.getElementById('mr'+aid);
+  if(mEl)mbs.m[aid]=mEl.value;if(rEl)mbs.r[aid]=rEl.value;
+  const inp=document.getElementById('fi'+aid+si);
+  if(inp){inp.value='';inp.click();}
+}
+
+function hdlPhoto(event,aid,si){
+  const file=event.target.files[0];
+  if(!file||!file.type.startsWith('image/')){alert('Selecione uma imagem.');return;}
+  const reader=new FileReader();
+  reader.onerror=function(){alert('Erro ao ler imagem.');};
+  reader.onload=function(e){
+    const img=new Image();
+    img.onload=function(){
+      const canvas=document.createElement('canvas');
+      const MAX=800;let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const comp=canvas.toDataURL('image/jpeg',0.7);
+      const a=addrs[aid];if(!a)return;
+      if(!a.photos||a.photos.length<3)a.photos=['','',''];
+      a.photos[si]=comp;
+      mbs.oid=aid;
+      uSlot(aid,si,comp);
+      const f=document.getElementById('fm'+aid),c=document.getElementById('ac'+aid),b=document.getElementById('eb'+aid);
+      if(f&&!f.classList.contains('open'))f.classList.add('open');
+      if(c&&!c.classList.contains('act'))c.classList.add('act');
+      if(b)b.textContent='Fechar';
+      const mEl=document.getElementById('mm'+aid),rEl=document.getElementById('mr'+aid);
+      if(mEl&&mbs.m[aid]!==undefined)mEl.value=mbs.m[aid];
+      if(rEl&&mbs.r[aid]!==undefined)rEl.value=mbs.r[aid];
+      setTimeout(function(){if(c)c.scrollIntoView({behavior:'smooth',block:'start'});},150);
+      wA(aid,a);
+      toast('Foto de '+SL[si]+' salva!');
+    };
+    img.onerror=function(){alert('Imagem invalida.');};
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function rmPhoto(aid,si){
+  const a=addrs[aid];if(!a)return;
+  if(!a.photos)a.photos=['','',''];
+  a.photos[si]='';
+  uSlot(aid,si,'');
+  wA(aid,a);
+}
+
+async function subReading(id){
+  const a=addrs[id];if(!a)return;
+  const mEl=document.getElementById('mm'+id),rEl=document.getElementById('mr'+id);
+  const meter=(mEl?mEl.value:mbs.m[id]||'').trim();
+  const reading=(rEl?rEl.value:mbs.r[id]||'').trim();
+  const photos=a.photos||['','',''];
+  if(!meter){alert('Informe o numero do hidrometro!');return;}
+  if(!reading){alert('Informe a leitura!');return;}
+  if(!photos.some(function(p){return p;})){alert('Adicione pelo menos uma foto!');return;}
+  const sb=document.getElementById('sb'+id);
+  if(sb){sb.disabled=true;sb.textContent='Sincronizando...';}
+  a.meter=meter;a.reading=reading;a.status='done';a.date=new Date().toLocaleString('pt-BR');
+  mbs.oid=null;delete mbs.m[id];delete mbs.r[id];
+  await wA(id,a);
+  toast('Leitura sincronizada!');
+}
+
+
+// =============================================
+// LOGIN
+// =============================================
+const PASSES = {admin:'sabesp@2024', motoboy:'Sabesp123', interferencia:'123'};
+let loginMode = 'admin';
+let currentUser = '';
+
+window.setLoginMode = function(mode) {
+  loginMode = mode;
+  document.getElementById('ltab-adm').classList.toggle('on', mode==='admin');
+  document.getElementById('ltab-mb').classList.toggle('on', mode==='motoboy');
+  const nameWrap = document.getElementById('login-name-wrap');
+  if (nameWrap) nameWrap.style.display = (mode === 'motoboy' || mode === 'interferencia') ? 'block' : 'none';
+  // Show correct options
+  document.querySelectorAll('.opt-mb').forEach(function(o){o.style.display=mode==='motoboy'?'':'none';});
+  document.querySelectorAll('.opt-int').forEach(function(o){o.style.display=mode==='interferencia'?'':'none';});
+  document.getElementById('login-name').value='';
+  // Update tab highlight
+  ['ltab-adm','ltab-mb','ltab-int'].forEach(function(id){
+    const e=document.getElementById(id);if(e)e.classList.remove('on');
+  });
+  const tabMap={admin:'ltab-adm',motoboy:'ltab-mb',interferencia:'ltab-int'};
+  const active=document.getElementById(tabMap[mode]);if(active)active.classList.add('on');
+};
+
+window.doLogin = function() {
+  const pass = document.getElementById('login-pass').value;
+  const nameEl = document.getElementById('login-name'); const name = nameEl ? (nameEl.tagName==='SELECT' ? nameEl.value : nameEl.value.trim()) : '';
+  const err = document.getElementById('login-err');
+  if (pass !== PASSES[loginMode]) {
+    err.style.display = 'block';
+    setTimeout(function(){err.style.display='none';}, 3000);
+    return;
+  }
+  if (loginMode === 'motoboy' && !name) {
+    alert('Digite seu nome!'); return;
+  }
+  currentUser = (loginMode === 'motoboy' || loginMode === 'interferencia') ? name : 'Admin';
+  document.getElementById('login-screen').style.display = 'none';
+  if (loginMode === 'admin') {
+    sv('admin');
+
+  } else if (loginMode === 'motoboy') {
+    sv('motoboy');
+    const nsub = document.querySelector('.nsub');
+    if (nsub) nsub.textContent = 'Hidrometro: ' + name;
+  } else {
+    sv('interferencia');
+    const nsub = document.querySelector('.nsub');
+    if (nsub) nsub.textContent = 'Interferencia: ' + name;
+  }
+};
+
+// =============================================
+// OFFLINE DETECTION
+// =============================================
+window.addEventListener('online', function() {
+  document.getElementById('offline-banner').classList.remove('show');
+  sync(true);
+  toast('Conexao restaurada!');
+  // Try to sync pending offline data
+  syncOfflineQueue();
+});
+window.addEventListener('offline', function() {
+  document.getElementById('offline-banner').classList.add('show');
+  sync(false);
+});
+
+let offlineQueue = JSON.parse(localStorage.getItem('cmnc-offline-q') || '[]');
+
+function saveOfflineQueue() {
+  try { localStorage.setItem('cmnc-offline-q', JSON.stringify(offlineQueue)); } catch(e) {}
+}
+
+async function wAWithOffline(id, d) {
+  if (!navigator.onLine) {
+    // Save to offline queue
+    offlineQueue = offlineQueue.filter(function(x){return x.id !== id;});
+    offlineQueue.push({id:id, data:d, ts:Date.now()});
+    saveOfflineQueue();
+    // Update local state
+    addrs[id] = d;
+    toast('Salvo localmente (offline)');
+    if (cv==='motoboy') { rMbSmart(); rStats(); }
+    return;
+  }
+  await wA(id, d);
+}
+
+async function syncOfflineQueue() {
+  if (!offlineQueue.length) return;
+  const q = [...offlineQueue];
+  offlineQueue = [];
+  saveOfflineQueue();
+  let synced = 0;
+  for (const item of q) {
+    try { await wA(item.id, item.data); synced++; } catch(e) { offlineQueue.push(item); }
+  }
+  saveOfflineQueue();
+  if (synced > 0) toast(synced + ' leituras sincronizadas!');
+}
+
+// =============================================
+// GPS
+// =============================================
+function getGPS() {
+  return new Promise(function(resolve) {
+    if (!navigator.geolocation) { resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      function(pos) { resolve({lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6)}); },
+      function() { resolve(null); },
+      {timeout: 5000, maximumAge: 60000}
+    );
+  });
+}
+
+// =============================================
+// EXCEL EXPORT
+// =============================================
+window.exportXLS = function() {
+  const vals = Object.values(addrs);
+  if (!vals.length) { alert('Nenhum dado para exportar!'); return; }
+  const rows = [['OS/Protocolo','Endereco','Observacao','Nr Hidrometro','Leitura m3','Status','Motoboy','GPS Lat','GPS Lng','Data/Hora']];
+  vals.forEach(function(a) {
+    rows.push([
+      a.protocol||'',
+      a.address||'',
+      a.obs||'',
+      a.meter||'',
+      a.reading||'',
+      a.status==='done'?'Concluido':'Pendente',
+      a.motoboy||'',
+      (a.gps&&a.gps.lat)||'',
+      (a.gps&&a.gps.lng)||'',
+      a.date||''
+    ]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:14},{wch:40},{wch:30},{wch:16},{wch:12},{wch:12},{wch:16},{wch:12},{wch:12},{wch:20}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Leituras');
+  const date = new Date().toLocaleDateString('pt-BR').split('/').join('-');
+  XLSX.writeFile(wb, 'hidrometros-'+date+'.xlsx');
+  toast('Excel gerado!');
+};
+
+// =============================================
+// HISTORY
+// =============================================
+window.showHistory = function() {
+  const vals = Object.values(addrs).filter(function(a){return a.status==='done'&&a.date;});
+  const byDate = {};
+  vals.forEach(function(a) {
+    const d = a.date ? a.date.substring(0,10) : 'Sem data';
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(a);
+  });
+  const el = document.getElementById('hist-content');
+  if (!Object.keys(byDate).length) {
+    el.innerHTML = '<div class="empty"><div class="ei">&#128202;</div><div>Nenhuma leitura concluida ainda.</div></div>';
+  } else {
+    const maxVal = Math.max.apply(null, Object.values(byDate).map(function(v){return v.length;}));
+    const sorted = Object.keys(byDate).sort().reverse();
+    let html = '';
+    sorted.forEach(function(d) {
+      const cnt = byDate[d].length;
+      const pct = Math.round(cnt/maxVal*100);
+      const mbs2 = [...new Set(byDate[d].map(function(a){return a.motoboy;}).filter(Boolean))].join(', ');
+      html += '<div class="hist-bar">';
+      html += '<div class="hist-date">'+d+'</div>';
+      html += '<div class="hist-track"><div class="hist-fill" style="width:'+pct+'%"></div></div>';
+      html += '<div class="hist-num">'+cnt+'</div>';
+      html += '</div>';
+      if (mbs2) html += '<div style="font-size:11px;color:#888;margin-bottom:8px;padding-left:98px">'+mbs2+'</div>';
+    });
+    el.innerHTML = html;
+  }
+  document.getElementById('histmod').classList.add('open');
+};
+window.closeHistory = function() { document.getElementById('histmod').classList.remove('open'); };
+
+// =============================================
+// ANOMALY DETECTION
+// =============================================
+function checkAnomaly(meter, reading, addressId) {
+  // Check if reading is suspiciously low (less than 10) or very high jump
+  const num = parseFloat(reading);
+  if (isNaN(num)) return null;
+  // Find previous readings for same address pattern
+  const similar = Object.values(addrs).filter(function(a) {
+    return a.status==='done' && a.reading && a.id!==addressId;
+  });
+  if (similar.length === 0) return null;
+  const avg = similar.reduce(function(s,a){return s+parseFloat(a.reading||0);},0)/similar.length;
+  if (avg > 0 && (num > avg*3 || num < avg*0.1)) {
+    return 'Leitura '+num+' m3 parece fora do padrao (media: '+Math.round(avg)+' m3)';
+  }
+  return null;
+}
+
+// Override subReading to add GPS + motoboy + anomaly check
+const _origSubReading = subReading;
+async function subReadingEnhanced(id) {
+  const a = addrs[id]; if (!a) return;
+  const mEl=document.getElementById('mm'+id), rEl=document.getElementById('mr'+id);
+  const meter=(mEl?mEl.value:mbs.m[id]||'').trim();
+  const reading=(rEl?rEl.value:mbs.r[id]||'').trim();
+  const photos=a.photos||['','',''];
+  if(!meter){alert('Informe o numero do hidrometro!');return;}
+  if(!reading){alert('Informe a leitura!');return;}
+  if(!photos.some(function(p){return p;})){alert('Adicione pelo menos uma foto!');return;}
+
+  // Anomaly check
+  const anomaly = checkAnomaly(meter, reading, id);
+  if (anomaly) {
+    const cont = confirm('Atencao: ' + anomaly + '\n\nDeseja confirmar mesmo assim?');
+    if (!cont) return;
+  }
+
+  const sb=document.getElementById('sb'+id);
+  if(sb){sb.disabled=true;sb.textContent='Obtendo localizacao...';}
+
+  // Get GPS
+  const gps = await getGPS();
+
+  if(sb){sb.textContent='Sincronizando...';}
+  a.meter=meter; a.reading=reading; a.status='done';
+  a.date=new Date().toLocaleString('pt-BR');
+  a.motoboy=currentUser||'';
+  if(gps) a.gps=gps;
+  mbs.oid=null; delete mbs.m[id]; delete mbs.r[id];
+  await wAWithOffline(id, a);
+  toast('Leitura sincronizada!');
+}
+
+// Replace subReading calls - we expose it globally
+window.subReadingEnhanced = subReadingEnhanced;
+
+
+// =============================================
+// MODULO INTERFERENCIA
+// =============================================
+const INT_KEY = 'cmnc-interferencia';
+
+function loadIntData() {
+  try { return JSON.parse(localStorage.getItem(INT_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveIntData(data) {
+  try { localStorage.setItem(INT_KEY, JSON.stringify(data)); } catch(e) {}
+  // Also sync to Firebase
+  set(ref(db,'cmnc/interferencias'), data.reduce(function(acc,item){acc[item.id]=item;return acc;},{}));
+}
+
+// Listen to Firebase for interferencias
+onValue(ref(db,'cmnc/interferencias'), function(snap){
+  const val = snap.val() || {};
+  const arr = Object.values(val);
+  localStorage.setItem(INT_KEY, JSON.stringify(arr));
+  if(cv==='interferencia') rInt();
+  if(cv==='admin') rAdminInt();
+});
+
+function intUID() { return 'int'+Date.now()+'_'+Math.floor(Math.random()*99999); }
+
+function rInt() {
+  const el = document.getElementById('ilist');
+  if(!el) return;
+  // New entry form always on top
+  el.innerHTML = '';
+  const form = buildIntForm();
+  el.appendChild(form);
+  // Show submitted entries
+  const data = loadIntData().filter(function(d){ return d.user===currentUser; });
+  if(data.length) {
+    const title = document.createElement('div');
+    title.style.cssText='font-size:14px;font-weight:700;color:#e65100;margin:16px 0 10px';
+    title.textContent='Seus registros de hoje:';
+    el.appendChild(title);
+    data.slice().reverse().forEach(function(d){ el.appendChild(buildIntCard(d)); });
+  }
+}
+
+function buildIntForm() {
+  const wrap = document.createElement('div');
+  wrap.className = 'card';
+  wrap.style.borderLeft = '4px solid #1565c0';
+
+  const title = document.createElement('div');
+  title.className = 'ctitle';
+  title.style.color = '#1565c0';
+  title.innerHTML = '&#9888; Novo Registro de Interferencia';
+  wrap.appendChild(title);
+
+  // OS field
+  const osG = document.createElement('div');osG.className='ffg';osG.style.marginBottom='12px';
+  const osL = document.createElement('label');osL.textContent='Numero da OS *';
+  const osI = document.createElement('input');osI.type='text';osI.id='int-os';osI.placeholder='Ex: 2614603386';
+  osG.appendChild(osL);osG.appendChild(osI);wrap.appendChild(osG);
+
+  // Address field
+  const adG = document.createElement('div');adG.className='ffg';adG.style.marginBottom='16px';
+  const adL = document.createElement('label');adL.textContent='Endereco completo com numero *';
+  const adI = document.createElement('input');adI.type='text';adI.id='int-addr';adI.placeholder='Ex: RUA HUMBERTO I, 402, V MARIANA';
+  adG.appendChild(adL);adG.appendChild(adI);wrap.appendChild(adG);
+
+  // Photo slots
+  const pTitle = document.createElement('div');
+  pTitle.style.cssText='font-size:13px;font-weight:700;color:#333;margin-bottom:8px';
+  pTitle.textContent='Fotos *';
+  wrap.appendChild(pTitle);
+
+  const slots = document.createElement('div');
+  slots.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px';
+
+  const INT_PHOTOS = ['Faixada','Interferencia'];
+  INT_PHOTOS.forEach(function(lbl, si) {
+    const sl = document.createElement('div');
+    sl.id = 'int-slot-'+si;
+    sl.className = 'ps';
+    sl.style.minHeight = '140px';
+    sl.onclick = function(){ trigIntPhoto(si); };
+    const ph = document.createElement('div');ph.className='psph';
+    const ci = document.createElement('div');ci.className='ci';ci.innerHTML='&#128247;';
+    const sn = document.createElement('div');sn.className='sn';sn.textContent=lbl;
+    const st = document.createElement('div');st.className='st';st.textContent='Toque para foto';
+    ph.appendChild(ci);ph.appendChild(sn);ph.appendChild(st);
+    sl.appendChild(ph);
+    slots.appendChild(sl);
+
+    // Hidden file input
+    const fi = document.createElement('input');
+    fi.type='file';fi.accept='image/*';fi.id='int-fi-'+si;fi.style.display='none';
+    fi.onchange = (function(sii){ return function(e){ hdlIntPhoto(e,sii); }; })(si);
+    document.getElementById('fi').appendChild(fi);
+  });
+  wrap.appendChild(slots);
+
+  // Submit button
+  const sb = document.createElement('button');
+  sb.className='sbtn';sb.style.background='#1565c0';
+  sb.innerHTML='&#10003; Registrar Interferencia';
+  sb.onclick = submitInt;
+  wrap.appendChild(sb);
+
+  return wrap;
+}
+
+// Temp photos for form
+let intPhotos = ['',''];
+
+function trigIntPhoto(si) {
+  const inp = document.getElementById('int-fi-'+si);
+  if(inp){ inp.value=''; inp.click(); }
+}
+
+function hdlIntPhoto(event, si) {
+  const file = event.target.files[0];
+  if(!file||!file.type.startsWith('image/')){alert('Selecione uma imagem.');return;}
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      const canvas=document.createElement('canvas');
+      const MAX=800;let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+      canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const comp=canvas.toDataURL('image/jpeg',0.7);
+      intPhotos[si]=comp;
+      const INT_LABELS=['Faixada','Interferencia'];
+      const slot=document.getElementById('int-slot-'+si);
+      if(slot){
+        slot.classList.add('hp');slot.innerHTML='';
+        const im=document.createElement('img');im.src=comp;slot.appendChild(im);
+        const lb=document.createElement('div');lb.className='pslbl';lb.textContent=INT_LABELS[si];slot.appendChild(lb);
+        const db2=document.createElement('button');db2.className='dbtn';db2.textContent='X';
+        db2.onclick=function(ev){ev.stopPropagation();intPhotos[si]='';slot.classList.remove('hp');
+          slot.innerHTML='';
+          const ph=document.createElement('div');ph.className='psph';
+          const ci=document.createElement('div');ci.className='ci';ci.innerHTML='&#128247;';
+          const sn=document.createElement('div');sn.className='sn';sn.textContent=INT_LABELS[si];
+          const st=document.createElement('div');st.className='st';st.textContent='Toque para foto';
+          ph.appendChild(ci);ph.appendChild(sn);ph.appendChild(st);slot.appendChild(ph);};
+        slot.appendChild(db2);
+      }
+      toast('Foto de '+INT_LABELS[si]+' salva!');
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitInt() {
+  const os = (document.getElementById('int-os')||{}).value||'';
+  const addr = (document.getElementById('int-addr')||{}).value||'';
+  if(!os.trim()){alert('Informe o numero da OS!');return;}
+  if(!addr.trim()){alert('Informe o endereco!');return;}
+  if(!intPhotos[0]&&!intPhotos[1]){alert('Adicione pelo menos uma foto!');return;}
+
+  const gps = await getGPS();
+  const entry = {
+    id: intUID(),
+    os: os.trim(),
+    address: addr.trim(),
+    photos: [intPhotos[0]||'', intPhotos[1]||''],
+    user: currentUser,
+    gps: gps,
+    date: new Date().toLocaleString('pt-BR'),
+    status: 'done'
+  };
+
+  const data = loadIntData();
+  data.push(entry);
+  saveIntData(data);
+
+  // Reset form
+  intPhotos = ['',''];
+  document.getElementById('int-os').value='';
+  document.getElementById('int-addr').value='';
+  [0,1].forEach(function(si){
+    const slot=document.getElementById('int-slot-'+si);
+    if(slot){
+      const INT_LABELS=['Faixada','Interferencia'];
+      slot.classList.remove('hp');slot.innerHTML='';
+      const ph=document.createElement('div');ph.className='psph';
+      const ci=document.createElement('div');ci.className='ci';ci.innerHTML='&#128247;';
+      const sn=document.createElement('div');sn.className='sn';sn.textContent=INT_LABELS[si];
+      const st=document.createElement('div');st.className='st';st.textContent='Toque para foto';
+      ph.appendChild(ci);ph.appendChild(sn);ph.appendChild(st);slot.appendChild(ph);
+    }
+  });
+
+  toast('Interferencia registrada e sincronizada!');
+  rInt();
+  if(cv==='admin') rAdminInt();
+}
+
+function buildIntCard(d) {
+  const card = document.createElement('div');
+  card.className='acard done';
+  const top = document.createElement('div');top.className='atop';
+  const info = document.createElement('div');
+  const nm = document.createElement('div');nm.className='aname';nm.style.color='#1565c0';
+  nm.innerHTML='&#9888; '+d.address;
+  const mt = document.createElement('div');mt.className='amet';
+  mt.textContent='OS: '+d.os+' | '+d.date;
+  const ut = document.createElement('div');ut.className='mb-tag';ut.style.background='#e3f2fd';ut.style.color='#1565c0';
+  ut.innerHTML='&#128100; '+d.user;
+  info.appendChild(nm);info.appendChild(mt);info.appendChild(ut);
+  if(d.gps){const gt=document.createElement('div');gt.className='gps-tag';gt.textContent=d.gps.lat+', '+d.gps.lng;info.appendChild(gt);}
+  const bdg=document.createElement('span');bdg.className='bdg';bdg.style.cssText='background:#e3f2fd;color:#1565c0';bdg.textContent='Registrado';
+  top.appendChild(info);top.appendChild(bdg);card.appendChild(top);
+
+  // Thumbs
+  if(d.photos&&d.photos.some(function(p){return p;})){
+    const INT_LABELS=['Faixada','Interferencia'];
+    const tstrip=document.createElement('div');tstrip.className='tstrip';tstrip.style.marginTop='10px';
+    d.photos.forEach(function(p,i){
+      if(!p)return;
+      const img=document.createElement('img');img.className='tsm';img.src=p;img.style.width='44px';img.style.height='44px';img.title=INT_LABELS[i];
+      tstrip.appendChild(img);
+    });
+    card.appendChild(tstrip);
+  }
+  return card;
+}
+
+// Admin panel for interferencias
+function rAdminInt() {
+  const existing = document.getElementById('admin-int-section');
+  if(existing) existing.remove();
+
+  const data = loadIntData();
+  if(!data.length) return;
+
+  const section = document.createElement('div');
+  section.id='admin-int-section';
+  section.className='card';
+  section.style.borderLeft='4px solid #1565c0';
+
+  const sh = document.createElement('div');sh.className='sh';
+  const title=document.createElement('div');title.className='ctitle';title.style.color='#1565c0';
+  title.innerHTML='&#128260; Preservacao de Interferencia ('+data.length+' registros)';
+  const actDiv=document.createElement('div');actDiv.style.cssText='display:flex;gap:6px;flex-wrap:wrap';
+  const bulkBtn=document.createElement('button');bulkBtn.className='btn bsm';bulkBtn.style.cssText='background:#1565c0;color:white';bulkBtn.innerHTML='&#128203; Em Lote';bulkBtn.onclick=showIntBulk;actDiv.appendChild(bulkBtn);
+  const revBtn=document.createElement('button');revBtn.className='btn bsm';revBtn.style.cssText='background:#1565c0;color:white';revBtn.innerHTML='&#9997; Revisar / PDF / Excel';revBtn.onclick=openIntRev;actDiv.appendChild(revBtn);
+  sh.appendChild(title);sh.appendChild(actDiv);section.appendChild(sh);
+
+  const tbl=document.createElement('table');tbl.style.width='100%';tbl.style.borderCollapse='collapse';tbl.style.fontSize='13px';
+  const thead=tbl.createTHead();const hr=thead.insertRow();
+  ['OS','Endereco','Fotos','Usuario','GPS','Data'].forEach(function(h){
+    const th=document.createElement('th');th.textContent=h;
+    th.style.cssText='background:#e3f2fd;color:#1565c0;padding:10px 8px;text-align:left;font-weight:700;';
+    hr.appendChild(th);
+  });
+  const tbody=tbl.createTBody();
+  data.slice().reverse().forEach(function(d){
+    const tr=tbody.insertRow();
+    tr.style.borderBottom='1px solid #f0f0f0';
+    const INT_LABELS=['Faixada','Interferencia'];
+    [d.os||'--',d.address||'--'].forEach(function(v){const td=tr.insertCell();td.style.cssText='padding:8px;font-size:12px';td.textContent=v;});
+    const ptd=tr.insertCell();ptd.style.padding='8px';
+    const ps=document.createElement('div');ps.className='tstrip';
+    (d.photos||[]).forEach(function(p,i){if(!p)return;const img=document.createElement('img');img.className='tsm';img.src=p;img.title=INT_LABELS[i];ps.appendChild(img);});
+    ptd.appendChild(ps);
+    [d.user||'--', (d.gps?d.gps.lat+','+d.gps.lng:'--'), d.date||'--'].forEach(function(v){
+      const td=tr.insertCell();td.style.cssText='padding:8px;font-size:11px;color:#666';td.textContent=v;
+    });
+  });
+  section.appendChild(tbl);
+
+  const adminMain = document.getElementById('va');
+  if(adminMain) adminMain.appendChild(section);
+}
+
+function exportIntXLS() {
+  const data = loadIntData();
+  if(!data.length){alert('Nenhum dado!');return;}
+  const rows=[['OS','Endereco','Usuario','GPS Lat','GPS Lng','Data']];
+  data.forEach(function(d){
+    rows.push([d.os||'',d.address||'',d.user||'',(d.gps&&d.gps.lat)||'',(d.gps&&d.gps.lng)||'',d.date||'']);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:40},{wch:16},{wch:14},{wch:14},{wch:20}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Interferencias');
+  const dt=new Date().toLocaleDateString('pt-BR').split('/').join('-');
+  XLSX.writeFile(wb,'interferencias-'+dt+'.xlsx');
+  toast('Excel gerado!');
+}
+
+// Load interferencia data into admin on startup
+setTimeout(function(){ rAdminInt(); }, 2000);
+
+
+// =============================================
+// INTERFERENCIA - BULK IMPORT
+// =============================================
+window.showIntBulk = function() { document.getElementById('int-bulk-mod').classList.add('open'); };
+window.closeIntBulk = function() { document.getElementById('int-bulk-mod').classList.remove('open'); };
+window.importIntBulk = function() {
+  const lines = document.getElementById('int-bulk-txt').value.split('\n').filter(function(l){return l.trim();});
+  let cnt = 0;
+  const data = loadIntData();
+  lines.forEach(function(line) {
+    const parts = line.split('|');
+    let os='', addr='';
+    if(parts.length>=2){os=parts[0].trim();addr=parts[1].trim();}else{addr=line.trim();}
+    if(addr){
+      data.push({
+        id:intUID(), os:os, address:addr,
+        photos:['',''], user:currentUser||'Admin',
+        gps:null, date:new Date().toLocaleString('pt-BR'), status:'pending'
+      });
+      cnt++;
+    }
+  });
+  saveIntData(data);
+  document.getElementById('int-bulk-txt').value='';
+  window.closeIntBulk();
+  toast(cnt+' enderecos importados!');
+  rAdminInt();
+};
+
+// =============================================
+// INTERFERENCIA - REVIEW / EDIT / DELETE
+// =============================================
+let intSelIds = new Set();
+
+window.openIntRev = function() {
+  const data = loadIntData();
+  if(!data.length){alert('Nenhum registro de interferencia!');return;}
+  intSelIds = new Set();
+  renderIntRevTable(data);
+  document.getElementById('int-rev-mod').classList.add('open');
+};
+window.closeIntRev = function() { document.getElementById('int-rev-mod').classList.remove('open'); };
+
+window.intTogSel = function(id, checked) {
+  if(checked) intSelIds.add(id); else intSelIds.delete(id);
+  document.getElementById('int-sel-count') && (document.getElementById('int-sel-count').textContent = intSelIds.size + ' selecionados');
+};
+window.intTogSelAll = function(checked) {
+  const data = loadIntData();
+  intSelIds = checked ? new Set(data.map(function(d){return d.id;})) : new Set();
+  document.querySelectorAll('.int-row-chk').forEach(function(c){c.checked=checked;});
+};
+
+function renderIntRevTable(data) {
+  const tbody = document.getElementById('int-rev-body');
+  tbody.innerHTML = '';
+  const INT_LABELS = ['Faixada','Interferencia'];
+  data.slice().reverse().forEach(function(d, i) {
+    const tr = tbody.insertRow();
+    tr.id = 'int-row-'+d.id;
+    // Checkbox
+    const tc = tr.insertCell();tc.className='chk';
+    const chk=document.createElement('input');chk.type='checkbox';chk.className='int-row-chk';
+    chk.checked=intSelIds.has(d.id);
+    chk.onchange=(function(id){return function(){window.intTogSel(id,this.checked);};})(d.id);
+    tc.appendChild(chk);
+    // #
+    const tn=tr.insertCell();tn.style.cssText='color:#aaa;font-size:12px;text-align:center';tn.textContent=data.length-i;
+    // OS - editable
+    const tos=tr.insertCell();
+    const osInp=document.createElement('input');osInp.className='einp';osInp.value=d.os||'';osInp.style.minWidth='100px';
+    osInp.addEventListener('change',(function(id){return function(){
+      this.classList.add('chg');
+      const dt=loadIntData();const entry=dt.find(function(x){return x.id===id;});
+      if(entry){entry.os=this.value;saveIntData(dt);}
+    };})(d.id));
+    tos.appendChild(osInp);
+    // Address - editable
+    const tad=tr.insertCell();
+    const adInp=document.createElement('input');adInp.className='einp';adInp.value=d.address||'';adInp.style.minWidth='180px';
+    adInp.addEventListener('change',(function(id){return function(){
+      this.classList.add('chg');
+      const dt=loadIntData();const entry=dt.find(function(x){return x.id===id;});
+      if(entry){entry.address=this.value;saveIntData(dt);}
+    };})(d.id));
+    tad.appendChild(adInp);
+    // Photos
+    const tp=tr.insertCell();
+    const ps=document.createElement('div');ps.className='tstrip';
+    (d.photos||[]).forEach(function(p,si){
+      if(!p){const ph=document.createElement('div');ph.className='nps';ph.textContent='?';ps.appendChild(ph);return;}
+      const img=document.createElement('img');img.className='tsm';img.src=p;img.title=INT_LABELS[si];
+      img.style.cssText='width:36px;height:36px;cursor:pointer';
+      img.onclick=(function(pid,sii){return function(){previewIntPh(pid,sii);};})(d.id,si);
+      ps.appendChild(img);
+    });
+    tp.appendChild(ps);
+    // User
+    const tu=tr.insertCell();tu.style.cssText='font-size:12px;color:#1565c0;font-weight:600';tu.textContent=d.user||'--';
+    // Date
+    const tdt=tr.insertCell();tdt.style.cssText='font-size:11px;color:#888;white-space:nowrap';tdt.textContent=d.date||'--';
+    // Delete single
+    const tdl=tr.insertCell();
+    const db2=document.createElement('button');db2.className='btn br bsm';db2.textContent='X';
+    db2.onclick=(function(id){return function(){intDelOne(id);};})(d.id);
+    tdl.appendChild(db2);
+  });
+}
+
+function previewIntPh(id, si) {
+  const data = loadIntData();
+  const d = data.find(function(x){return x.id===id;});if(!d)return;
+  const INT_LABELS=['Faixada','Interferencia'];
+  document.getElementById('phmaddr').textContent=d.address;
+  const el=document.getElementById('phmgrid');el.innerHTML='';
+  (d.photos||[]).forEach(function(p,i){
+    if(!p)return;
+    const div=document.createElement('div');div.className='pi';
+    const img=document.createElement('img');img.src=p;
+    const lbl=document.createElement('div');lbl.className='pl';lbl.textContent=INT_LABELS[i];
+    div.appendChild(img);div.appendChild(lbl);el.appendChild(div);
+  });
+  document.getElementById('phmod').classList.add('open');
+}
+
+window.intDelOne = function(id) {
+  if(!confirm('Excluir este registro?'))return;
+  const data = loadIntData().filter(function(d){return d.id!==id;});
+  saveIntData(data);
+  const row=document.getElementById('int-row-'+id);if(row)row.remove();
+  toast('Registro excluido!');
+  rAdminInt();
+};
+
+window.intDelSelected = function() {
+  if(!intSelIds.size){alert('Selecione pelo menos um registro!');return;}
+  if(!confirm('Excluir '+intSelIds.size+' registro(s)?'))return;
+  const data = loadIntData().filter(function(d){return !intSelIds.has(d.id);});
+  intSelIds.clear();
+  saveIntData(data);
+  renderIntRevTable(data);
+  toast('Registros excluidos!');
+  rAdminInt();
+};
+
+// =============================================
+// INTERFERENCIA - PDF
+// =============================================
+window.genIntPDF = async function() {
+  const data = loadIntData();
+  if(!data.length){alert('Nenhum registro!');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const G=[21,101,192],W=[255,255,255],L=[227,242,253];
+
+  function hdr(t1,t2,t3){
+    doc.setFillColor(G[0],G[1],G[2]);doc.rect(0,0,210,46,'F');
+    doc.setFillColor(255,255,255);doc.circle(22,22,14,'F');
+    doc.setTextColor(G[0],G[1],G[2]);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text('CMNC',22,20,{align:'center'});doc.text('II',22,27,{align:'center'});
+    doc.setTextColor(W[0],W[1],W[2]);doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text(t1,130,15,{align:'center'});
+    if(t2){doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(t2,130,24,{align:'center'});}
+    if(t3){doc.setFontSize(8);doc.text(t3,130,32,{align:'center'});}
+  }
+  function ftr(p,tot){
+    doc.setFillColor(G[0],G[1],G[2]);doc.rect(0,285,210,12,'F');
+    doc.setFillColor(255,255,255);doc.circle(12,291,5,'F');
+    doc.setTextColor(G[0],G[1],G[2]);doc.setFontSize(5.5);doc.setFont('helvetica','bold');
+    doc.text('CMNC',12,290,{align:'center'});doc.text('II',12,294,{align:'center'});
+    doc.setTextColor(W[0],W[1],W[2]);doc.setFontSize(7);doc.setFont('helvetica','normal');
+    doc.text('CMNC II x SABESP - Relatorio de Preservacao de Interferencia',115,293,{align:'center'});
+    doc.text('Pag. '+p+'/'+tot,200,293,{align:'right'});
+  }
+
+  hdr('RELATORIO DE PRESERVACAO DE INTERFERENCIA','CMNC II x SABESP','Gerado em: '+new Date().toLocaleString('pt-BR'));
+  let y=54;
+  doc.setFillColor(L[0],L[1],L[2]);doc.roundedRect(14,y,182,14,3,3,'F');
+  doc.setTextColor(50,50,50);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text('Total de registros: '+data.length+'   |   Data: '+new Date().toLocaleDateString('pt-BR'),22,y+9);
+  y+=22;
+
+  // Table header
+  doc.setFillColor(G[0],G[1],G[2]);doc.rect(14,y,182,8,'F');
+  doc.setTextColor(W[0],W[1],W[2]);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+  doc.text('#',17,y+5.5);doc.text('OS',24,y+5.5);doc.text('Endereco',52,y+5.5);
+  doc.text('Usuario',132,y+5.5);doc.text('GPS',158,y+5.5);doc.text('Data',185,y+5.5);
+  y+=8;
+
+  data.forEach(function(d,i){
+    if(y>272){
+      doc.addPage();hdr('RELATORIO INTERFERENCIA (cont.)','CMNC II x SABESP','');y=54;
+      doc.setFillColor(G[0],G[1],G[2]);doc.rect(14,y,182,8,'F');
+      doc.setTextColor(W[0],W[1],W[2]);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+      doc.text('#',17,y+5.5);doc.text('OS',24,y+5.5);doc.text('Endereco',52,y+5.5);
+      doc.text('Usuario',132,y+5.5);doc.text('GPS',158,y+5.5);doc.text('Data',185,y+5.5);y+=8;
+    }
+    if(i%2===0){doc.setFillColor(235,245,255);doc.rect(14,y,182,10,'F');}
+    doc.setTextColor(50,50,50);doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+    const sa=(d.address||'').length>38?(d.address||'').substring(0,36)+'...':(d.address||'');
+    doc.text(String(i+1),17,y+6.5);
+    doc.text(d.os||'--',24,y+6.5);
+    doc.text(sa,52,y+6.5);
+    doc.text(d.user||'--',132,y+6.5);
+    doc.text(d.gps?(d.gps.lat+','+d.gps.lng):'--',158,y+6.5);
+    doc.text(d.date?d.date.substring(0,10):'--',185,y+6.5);
+    y+=10;
+  });
+
+  // Photo pages
+  const INT_LABELS=['Faixada','Interferencia'];
+  for(let i=0;i<data.length;i++){
+    const d=data[i];
+    const photos=d.photos||['',''];
+    if(!photos.some(function(p){return p;}))continue;
+    doc.addPage();
+    const addrS=(d.address||'').length>42?(d.address||'').substring(0,40)+'...':(d.address||'');
+    hdr('FOTOS - '+addrS,'OS: '+(d.os||'--')+'   Usuario: '+(d.user||'--'),'Data: '+(d.date||new Date().toLocaleDateString('pt-BR')));
+    // 2 photos side by side
+    const sw=82,sh=80,sx=14,sy=54,gap=12;
+    for(let si=0;si<2;si++){
+      const ph=photos[si];const px=sx+si*(sw+gap);
+      doc.setFillColor(L[0],L[1],L[2]);doc.roundedRect(px,sy,sw,sh+10,2,2,'F');
+      doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(G[0],G[1],G[2]);
+      doc.text(INT_LABELS[si],px+sw/2,sy+7,{align:'center'});
+      if(ph){try{doc.addImage(ph,'JPEG',px+2,sy+10,sw-4,sh-2);}catch(e){doc.setFillColor(200,200,200);doc.rect(px+2,sy+10,sw-4,sh-2,'F');}}
+      else{doc.setFillColor(230,230,230);doc.rect(px+2,sy+10,sw-4,sh-2,'F');doc.setTextColor(180,180,180);doc.text('Sem foto',px+sw/2,sy+sh/2+10,{align:'center'});}
+    }
+    const iy=sy+sh+18;
+    doc.setFillColor(L[0],L[1],L[2]);doc.roundedRect(14,iy,182,26,3,3,'F');
+    doc.setTextColor(50,50,50);doc.setFontSize(9);doc.setFont('helvetica','normal');
+    doc.text('OS: '+(d.os||'--'),20,iy+8);
+    doc.text('Endereco: '+(d.address||''),20,iy+16);
+    doc.text('Usuario: '+(d.user||'--')+'   Data: '+(d.date||''),20,iy+23);
+    if(d.gps)doc.text('GPS: '+d.gps.lat+', '+d.gps.lng,120,iy+23);
+  }
+
+  const tot=doc.getNumberOfPages();
+  for(let p=1;p<=tot;p++){doc.setPage(p);ftr(p,tot);}
+  const dt=new Date().toLocaleDateString('pt-BR').split('/').join('-');
+  doc.save('interferencia-'+dt+'.pdf');
+  toast('PDF gerado!');
+};
+
+// =============================================
+// INTERFERENCIA - EXCEL
+// =============================================
+window.genIntXLS = function() {
+  const data = loadIntData();
+  if(!data.length){alert('Nenhum registro!');return;}
+  const rows=[['#','OS','Endereco','Usuario','GPS Lat','GPS Lng','Data']];
+  data.forEach(function(d,i){
+    rows.push([i+1, d.os||'', d.address||'', d.user||'',
+      (d.gps&&d.gps.lat)||'', (d.gps&&d.gps.lng)||'', d.date||'']);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:5},{wch:14},{wch:40},{wch:16},{wch:14},{wch:14},{wch:20}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Interferencias');
+  const dt=new Date().toLocaleDateString('pt-BR').split('/').join('-');
+  XLSX.writeFile(wb,'interferencia-'+dt+'.xlsx');
+  toast('Excel gerado!');
+};
+
+window.mbs=mbs;
+</script>
+</body>
+</html>
